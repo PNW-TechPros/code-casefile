@@ -1,0 +1,64 @@
+{
+  "name": "code-casefile",
+  "displayName": "VSCode Casefile",
+  "description": "The essential assistant for deep-dives in code",
+  "license": "MIT",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:code-casefile.helloWorld"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [],
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "codeCasefile.casefileView",
+          "name": "Current Casefile"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "esbuild-base": "npm-run-all -p esbuild:*",
+    "esbuild:extension": "cross-env-shell esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node $PKG_BUILD_FLAGS",
+    "esbuild:casefileView": "cross-env-shell esbuild ./src/views/casefile/view.js --bundle --outfile=out/casefileView/main.js --format=iife --loader:.js=jsx $PKG_BUILD_FLAGS",
+    "compile": "cross-env PKG_BUILD_FLAGS=\"--sourcemap\" npm run esbuild-base",
+    "watch": "cross-env PKG_BUILD_FLAGS=\"--sourcemap --watch\" npm run esbuild-base",
+    "compile-tsc": "tsc -p ./",
+    "watch-tsc": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.0.1",
+    "@types/lodash": "^4.14.194",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^5.49.0",
+    "@typescript-eslint/parser": "^5.49.0",
+    "@vscode/test-electron": "^2.2.2",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.17.19",
+    "eslint": "^8.33.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.1.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@thi.ng/hiccup": "^4.2.41",
+    "lodash": "^4.17.21",
+    "preact": "^10.15.0"
+  }
+}
