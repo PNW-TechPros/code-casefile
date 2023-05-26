@@ -113,6 +113,13 @@ export class CasefileView implements vscode.WebviewViewProvider {
     public static readonly viewType = 'codeCasefile.casefileView';
     
     private _view?: vscode.WebviewView;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    static PanelSerializer = class implements vscode.WebviewPanelSerializer {
+        async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: unknown): Promise<void> {
+            webviewPanel.webview.postMessage({ type: 'setViewState', value: state });
+            // TODO: Ideally, we wait here for a return message indicating the state is set
+        }
+    };
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
