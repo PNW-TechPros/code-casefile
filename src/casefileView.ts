@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 import * as vscode from 'vscode';
+import { debug } from './debugLog';
 
 const sampleCasefile = {
     "bookmarks": [
@@ -116,8 +117,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     static PanelSerializer = class implements vscode.WebviewPanelSerializer {
         async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: unknown): Promise<void> {
-            webviewPanel.webview.postMessage({ type: 'setViewState', value: state });
-            // TODO: Ideally, we wait here for a return message indicating the state is set
+            debug("Deserializing casefile view webview panel");
         }
     };
 

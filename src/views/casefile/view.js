@@ -6,10 +6,13 @@ import { thru } from 'lodash';
 const vscode = acquireVsCodeApi();
 
 const View = () => {
-    const [state, setState] = useState({});
+    const [state, setState] = thru(
+        useState(vscode.getState() || {}),
+        ([state, setState]) => [state, (newState) => {setState(newState); vscode.setState(newState);}]
+    );
 
     useEffect(() => thru(
-        getMessageHandlers({ getState: () => state, setState }),
+        getMessageHandlers({ context: { getState: () => state, setState } }),
         handlers => {
             const handleEvent = (event) => handlers.dispatch(event.data);
             window.addEventListener('message', handleEvent);

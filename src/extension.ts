@@ -7,6 +7,10 @@ export function activate(context: vscode.ExtensionContext) {
 	const subscribe = context.subscriptions.push.bind(context.subscriptions);
 
 	const casefileView = new CasefileView(context.extensionUri);
+	subscribe(vscode.window.registerWebviewPanelSerializer(
+		CasefileView.viewType,
+		new CasefileView.PanelSerializer()
+	));
 	subscribe(vscode.window.registerWebviewViewProvider(
 		CasefileView.viewType,
 		casefileView
