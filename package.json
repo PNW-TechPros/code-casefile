@@ -30,7 +30,7 @@
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild-base": "npm-run-all -p esbuild:*",
     "esbuild:extension": "cross-env-shell esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node $PKG_BUILD_FLAGS",
-    "esbuild:casefileView": "cross-env-shell esbuild ./src/views/casefile/view.js --bundle --outfile=out/casefileView/main.js --format=iife --loader:.js=jsx $PKG_BUILD_FLAGS",
+    "esbuild:casefileView": "cross-env-shell esbuild ./src/views/casefile/view.js --bundle --outfile=out/casefileView/main.js --format=iife --loader:.js=jsx --jsx-import-source=preact --jsx=automatic $PKG_BUILD_FLAGS",
     "compile": "cross-env PKG_BUILD_FLAGS=\"--sourcemap\" npm run esbuild-base",
     "watch": "cross-env PKG_BUILD_FLAGS=\"--sourcemap --watch\" npm run esbuild-base",
     "compile-tsc": "tsc -p ./",

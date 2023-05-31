@@ -1,9 +1,7 @@
-import { h, render } from 'preact';
+import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import getMessageHandlers from './receivedMessages';
 import { thru } from 'lodash';
-
-/** @jsx h */
 
 const vscode = acquireVsCodeApi();
 
