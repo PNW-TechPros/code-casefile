@@ -15,7 +15,12 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [],
+    "commands": [
+      {
+        "command": "codeCasefile.loadCannedCasefile",
+        "title": "Load canned casefile data"
+      }
+    ],
     "views": {
       "explorer": [
         {

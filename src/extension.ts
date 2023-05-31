@@ -23,6 +23,13 @@ export function activate(context: vscode.ExtensionContext) {
 		// Display a message box to the user
 		vscode.window.showInformationMessage('Hello World from VSCode Casefile!');
 	}));
+	subscribe(vscode.commands.registerCommand('codeCasefile.loadCannedCasefile', () => {
+		casefileView.loadCannedCasefileData({
+			onFail: (msg) => {
+				vscode.window.showErrorMessage(msg);
+			}
+		});
+	}));
 }
 
 // This method is called when your extension is deactivated

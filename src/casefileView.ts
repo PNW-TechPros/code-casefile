@@ -147,6 +147,17 @@ export class CasefileView implements vscode.WebviewViewProvider {
         });
     }
 
+    async loadCannedCasefileData({ onFail }: { onFail?: (msg: string) => void } = {}): Promise<void> {
+        if (!this._view) {
+            if (onFail) {
+                onFail("CasefileView not yet resolved");
+            }
+            return;
+        }
+
+        this._view.webview.postMessage({ type: 'setViewState', value: sampleCasefile });
+    }
+
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
         // BEGIN SAMPLE CODE from https://github.com/microsoft/vscode-extension-samples/blob/2f83557a56c37a5e48943ea0201e1729708690b6/webview-view-sample/src/extension.ts
 
