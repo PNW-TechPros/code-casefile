@@ -114,7 +114,6 @@ export class CasefileView implements vscode.WebviewViewProvider {
     public static readonly viewType = 'codeCasefile.casefileView';
     
     private _view?: vscode.WebviewView;
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     static PanelSerializer = class implements vscode.WebviewPanelSerializer {
         async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: unknown): Promise<void> {
             debug("Deserializing casefile view webview panel");
@@ -190,7 +189,6 @@ export class CasefileView implements vscode.WebviewViewProvider {
                         charset: 'UTF-8'
                     }],
                     ['meta', {
-                        // eslint-disable-next-line @typescript-eslint/naming-convention
                         "http-equiv": "Content-Security-Policy",
                         content: buildString({term: ';'}, [
                             `default-src 'none'`,
@@ -247,4 +245,3 @@ function buildString(
 function getNonce() : string {
     return randomBytes(16).toString('base64');
 }
-

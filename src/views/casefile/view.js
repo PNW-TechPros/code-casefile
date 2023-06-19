@@ -1,4 +1,5 @@
 import { render } from 'preact';
+import React from 'preact/compat'; // This just makes VSCode's Intellisense happy
 import { useEffect, useState } from 'preact/hooks';
 import getMessageHandlers from './receivedMessages';
 import { thru } from 'lodash';
@@ -20,7 +21,7 @@ const View = () => {
         handlers => {
             const handleEvent = (event) => {
                 handlers.dispatch(event.data);
-            }
+            };
             window.addEventListener('message', handleEvent);
             return () => window.removeEventListener('message', handleEvent);
         }
