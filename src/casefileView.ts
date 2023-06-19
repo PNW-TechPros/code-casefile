@@ -7,81 +7,117 @@ const sampleCasefile = {
         {
             "children": [
                 {
-                    "children": [
-                        {
-                            "children": [],
-                            "file": "lib/casefile-sharing.js",
-                            "line": 503,
-                            "markText": "JSON.stringify({bookmarks})",
-                            "notes": "`bookmarks` is an `Array` of bookmark `Objects`.  \nSee `openBookmark`",
-                            "peg": {
-                                "line": "503",
-                                "commit": "2995ead2690f164b4381856d93fa3cb4711eae06"
-                            },
-                            "id": "1582324788217.1"
-                        }
-                    ],
-                    "file": "lib/casefile-sharing.js",
-                    "line": 496,
-                    "markText": "function promiseToGetHashOfCasefile",
+                    "children": [],
+                    "file": "src/views/casefile/receivedMessages.js",
+                    "line": 33,
+                    "markText": "'setViewState'",
                     "notes": "",
                     "peg": {
-                        "line": "357",
-                        "commit": "266b02658bf11d5f332e6c98e521b558a228806c"
+                        "line": 33,
+                        "commit": "c379bc352cc02a46b01e8deb3954afc92d1cdb45"
                     },
-                    "id": "1582324788217.0"
+                    "id": "1687192192767.7"
                 }
             ],
-            "file": "lib/casefile-sharing.js",
-            "line": 363,
-            "markText": "function promiseToShareCasefile",
-            "notes": "",
+            "file": "src/extension.ts",
+            "line": 26,
+            "markText": "'codeCasefile.loadCannedCasefile'",
+            "notes": "Registration of command to load canned casefile data for testing",
             "peg": {
-                "line": "265",
-                "commit": "e4728a54bd0372d9ccfba3e0fbc4fabf7366065d"
+                "line": 26,
+                "commit": "0aeeeafe32293b538d3f33e9230a6c7f71ef0c17"
             },
-            "id": "1582324633673.1"
+            "id": "1687192192767.1"
         },
         {
             "children": [
                 {
                     "children": [
                         {
-                            "children": [],
-                            "file": "lib/bookmarks.js",
-                            "line": 66,
-                            "markText": "function computeGitPeggingInfo",
-                            "notes": "Requesting and parsing \"hunks\" from `git diff`",
+                            "children": [
+                                {
+                                    "children": [],
+                                    "file": "src/views/casefile/receivedMessages.js",
+                                    "line": 31,
+                                    "markText": "MESSAGE HANDLERS",
+                                    "notes": "Handlers for messages from the main process",
+                                    "peg": {
+                                        "line": 31,
+                                        "commit": "c379bc352cc02a46b01e8deb3954afc92d1cdb45"
+                                    },
+                                    "id": "1687192192767.4"
+                                },
+                                {
+                                    "children": [],
+                                    "file": "src/views/casefile/bookmark.js",
+                                    "line": 3,
+                                    "markText": "const Bookmark",
+                                    "notes": "",
+                                    "peg": {
+                                        "line": 3,
+                                        "commit": "fafe024156f14854bfb52c325ec0e23450e2a3d3"
+                                    },
+                                    "id": "1687192192767.6"
+                                }
+                            ],
+                            "file": "src/views/casefile/view.js",
+                            "line": 13,
+                            "markText": "const View",
+                            "notes": "Top-level Preact component",
                             "peg": {
-                                "line": "43",
-                                "commit": "99cc0ec48ac85a8adf05bfd27329df184de36497"
+                                "line": 10,
+                                "commit": "c379bc352cc02a46b01e8deb3954afc92d1cdb45"
                             },
-                            "id": "1582324788217.4"
+                            "id": "1687192192767.3"
                         }
                     ],
-                    "file": "lib/bookmarks.js",
-                    "line": 300,
-                    "markText": "function computeCurrentLineRange",
-                    "notes": "Given a file path, commit, and line number, figure out  \nthe corresponding range of line numbers (which may  \nonly include one line) in the current revision, and which  \namong them is the _most_ likely to represent the  \nindicated line.",
+                    "file": "src/casefileView.ts",
+                    "line": 112,
+                    "markText": "class CasefileView",
+                    "notes": "`implements vscode.WebViewProvider`\n\nHandlers for messages from the webview are declared with `handleCasefileViewMessage`",
                     "peg": {
-                        "line": "144",
-                        "commit": "99cc0ec48ac85a8adf05bfd27329df184de36497"
+                        "line": 111,
+                        "commit": "3da2acac36ca254e98380965f83b2cb22a271f54"
                     },
-                    "id": "1582324788217.3"
+                    "id": "1687192192767.10"
                 }
             ],
-            "file": "lib/bookmarks.js",
-            "line": 7,
-            "markText": "function openBookmark",
+            "file": "src/extension.ts",
+            "line": 14,
+            "markText": "registerWebviewViewProvider",
+            "notes": "Casefile view registration",
+            "peg": {
+                "line": 10,
+                "commit": "3da2acac36ca254e98380965f83b2cb22a271f54"
+            },
+            "id": "1687192192767.2"
+        },
+        {
+            "children": [],
+            "file": "src/datumPlans.js",
+            "line": 3,
+            "markText": "const $casefile",
             "notes": "",
             "peg": {
-                "line": "5",
-                "commit": "908cb84f8a33d7739540c2bf17d55bdb393173a6"
+                "line": 3,
+                "commit": "3c8bfaa6c477f917e19bd6a560ff29302c311c43"
             },
-            "id": "1582324788217.2"
+            "id": "1687192192767.8"
+        },
+        {
+            "children": [],
+            "file": "src/datumPlans.js",
+            "line": 8,
+            "markText": "const $bookmark",
+            "notes": "",
+            "peg": {
+                "line": 8,
+                "commit": "3c8bfaa6c477f917e19bd6a560ff29302c311c43"
+            },
+            "id": "1687192192767.9"
         }
     ],
-    "path": "casefile-basics/bdc74313-639c-490f-aab2-dc05e0bccf97"
+    "path": "Key parts of extension/511f68ea-656f-4424-bae5-d2a03edb5926"
 };
 
 type Bookmark = {
