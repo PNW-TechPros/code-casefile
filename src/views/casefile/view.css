@@ -1,3 +1,15 @@
+.bookmark {
+    margin-bottom: 0.4em;
+}
+
 .bookmark-children {
     padding-left: 1em;
+}
+
+.line-ref {
+    font-style: italic;
+}
+
+.tagged-content {
+    font-weight: bold;
 }
