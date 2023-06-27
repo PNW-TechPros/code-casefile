@@ -1,6 +1,7 @@
 {
   "name": "code-casefile",
-  "displayName": "VSCode Casefile",
+  "publisher": "pnw-techpros",
+  "displayName": "Casefile",
   "description": "The essential assistant for deep-dives in code",
   "license": "MIT",
   "version": "0.0.1",
@@ -15,10 +16,23 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": [
+      {
+        "title": "Casefile",
+        "properties": {
+          "casefile.externalTools.path": {
+            "scope": "machine",
+            "type": "string",
+            "default": "",
+            "description": "Path of folders to search for external tool programs (uses the editor's PATH environment variable if empty)"
+          }
+        }
+      }
+    ],
     "commands": [
       {
         "command": "codeCasefile.loadCannedCasefile",
-        "title": "Load canned casefile data"
+        "title": "Casefile: Load canned casefile data"
       }
     ],
     "views": {
@@ -63,6 +77,7 @@
   },
   "dependencies": {
     "@thi.ng/hiccup": "^4.2.41",
+    "git-casefile": "^1.0.5",
     "lodash": "^4.17.21",
     "natural-lenses": "^2.3.1",
     "preact": "^10.15.0"

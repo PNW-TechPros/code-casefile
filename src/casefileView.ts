@@ -1,123 +1,92 @@
 import { randomBytes } from 'crypto';
 import * as vscode from 'vscode';
 import { debug } from './debugLog';
+import { OPEN_BOOKMARK } from './messageNames';
+import Services from './services';
+import { connectWebview, dispatchMessage, messageHandler } from './webviewHelper';
+import { thru } from 'lodash';
+import path = require('path');
 
 const sampleCasefile = {
     "bookmarks": [
         {
             "children": [
                 {
-                    "children": [],
-                    "file": "src/views/casefile/receivedMessages.js",
-                    "line": 33,
-                    "markText": "'setViewState'",
+                    "children": [
+                        {
+                            "children": [],
+                            "file": "lib/casefile-sharing.js",
+                            "line": 503,
+                            "markText": "JSON.stringify({bookmarks})",
+                            "notes": "`bookmarks` is an `Array` of bookmark `Objects`.  \nSee `openBookmark`",
+                            "peg": {
+                                "line": "503",
+                                "commit": "2995ead2690f164b4381856d93fa3cb4711eae06"
+                            },
+                            "id": "1582324788217.1"
+                        }
+                    ],
+                    "file": "lib/casefile-sharing.js",
+                    "line": 496,
+                    "markText": "function promiseToGetHashOfCasefile",
                     "notes": "",
                     "peg": {
-                        "line": 33,
-                        "commit": "c379bc352cc02a46b01e8deb3954afc92d1cdb45"
+                        "line": "357",
+                        "commit": "266b02658bf11d5f332e6c98e521b558a228806c"
                     },
-                    "id": "1687192192767.7"
+                    "id": "1582324788217.0"
                 }
             ],
-            "file": "src/extension.ts",
-            "line": 26,
-            "markText": "'codeCasefile.loadCannedCasefile'",
-            "notes": "Registration of command to load canned casefile data for testing",
+            "file": "lib/casefile-sharing.js",
+            "line": 363,
+            "markText": "function promiseToShareCasefile",
+            "notes": "",
             "peg": {
-                "line": 26,
-                "commit": "0aeeeafe32293b538d3f33e9230a6c7f71ef0c17"
+                "line": "265",
+                "commit": "e4728a54bd0372d9ccfba3e0fbc4fabf7366065d"
             },
-            "id": "1687192192767.1"
+            "id": "1582324633673.1"
         },
         {
             "children": [
                 {
                     "children": [
                         {
-                            "children": [
-                                {
-                                    "children": [],
-                                    "file": "src/views/casefile/receivedMessages.js",
-                                    "line": 31,
-                                    "markText": "MESSAGE HANDLERS",
-                                    "notes": "Handlers for messages from the main process",
-                                    "peg": {
-                                        "line": 31,
-                                        "commit": "c379bc352cc02a46b01e8deb3954afc92d1cdb45"
-                                    },
-                                    "id": "1687192192767.4"
-                                },
-                                {
-                                    "children": [],
-                                    "file": "src/views/casefile/bookmark.js",
-                                    "line": 3,
-                                    "markText": "const Bookmark",
-                                    "notes": "",
-                                    "peg": {
-                                        "line": 3,
-                                        "commit": "fafe024156f14854bfb52c325ec0e23450e2a3d3"
-                                    },
-                                    "id": "1687192192767.6"
-                                }
-                            ],
-                            "file": "src/views/casefile/view.js",
-                            "line": 13,
-                            "markText": "const View",
-                            "notes": "Top-level Preact component",
+                            "children": [],
+                            "file": "lib/bookmarks.js",
+                            "line": 66,
+                            "markText": "function computeGitPeggingInfo",
+                            "notes": "Requesting and parsing \"hunks\" from `git diff`",
                             "peg": {
-                                "line": 10,
-                                "commit": "c379bc352cc02a46b01e8deb3954afc92d1cdb45"
+                                "line": "43",
+                                "commit": "99cc0ec48ac85a8adf05bfd27329df184de36497"
                             },
-                            "id": "1687192192767.3"
+                            "id": "1582324788217.4"
                         }
                     ],
-                    "file": "src/casefileView.ts",
-                    "line": 112,
-                    "markText": "class CasefileView",
-                    "notes": "`implements vscode.WebViewProvider`\n\nHandlers for messages from the webview are declared with `handleCasefileViewMessage`",
+                    "file": "lib/bookmarks.js",
+                    "line": 300,
+                    "markText": "function computeCurrentLineRange",
+                    "notes": "Given a file path, commit, and line number, figure out  \nthe corresponding range of line numbers (which may  \nonly include one line) in the current revision, and which  \namong them is the _most_ likely to represent the  \nindicated line.",
                     "peg": {
-                        "line": 111,
-                        "commit": "3da2acac36ca254e98380965f83b2cb22a271f54"
+                        "line": "144",
+                        "commit": "99cc0ec48ac85a8adf05bfd27329df184de36497"
                     },
-                    "id": "1687192192767.10"
+                    "id": "1582324788217.3"
                 }
             ],
-            "file": "src/extension.ts",
-            "line": 14,
-            "markText": "registerWebviewViewProvider",
-            "notes": "Casefile view registration",
-            "peg": {
-                "line": 10,
-                "commit": "3da2acac36ca254e98380965f83b2cb22a271f54"
-            },
-            "id": "1687192192767.2"
-        },
-        {
-            "children": [],
-            "file": "src/datumPlans.js",
-            "line": 3,
-            "markText": "const $casefile",
+            "file": "lib/bookmarks.js",
+            "line": 7,
+            "markText": "function openBookmark",
             "notes": "",
             "peg": {
-                "line": 3,
-                "commit": "3c8bfaa6c477f917e19bd6a560ff29302c311c43"
+                "line": "5",
+                "commit": "908cb84f8a33d7739540c2bf17d55bdb393173a6"
             },
-            "id": "1687192192767.8"
-        },
-        {
-            "children": [],
-            "file": "src/datumPlans.js",
-            "line": 8,
-            "markText": "const $bookmark",
-            "notes": "",
-            "peg": {
-                "line": 8,
-                "commit": "3c8bfaa6c477f917e19bd6a560ff29302c311c43"
-            },
-            "id": "1687192192767.9"
+            "id": "1582324788217.2"
         }
     ],
-    "path": "Key parts of extension/511f68ea-656f-4424-bae5-d2a03edb5926"
+    "path": "casefile-basics/bdc74313-639c-490f-aab2-dc05e0bccf97"
 };
 
 type Bookmark = {
@@ -134,19 +103,7 @@ type Bookmark = {
     collapsed?: boolean,
 };
 
-const MESSAGE_HANDLERS: Map<string, { handler: (data: any) => any, registration: Error }> = new Map();
-function handleCasefileViewMessage(type: string, handler: (data: any) => any): void {
-    const existing = MESSAGE_HANDLERS.get(type);
-    if (existing) {
-        throw Object.assign(new Error(`Second registration of '${type}' handler`), {
-            ["first registration"]: existing.registration,
-        });
-    }
-    MESSAGE_HANDLERS.set(type, { handler, registration: new Error(`First registration of '${type}' handler`) });
-}
-
 export class CasefileView implements vscode.WebviewViewProvider {
-
     public static readonly viewType = 'codeCasefile.casefileView';
     
     private _view?: vscode.WebviewView;
@@ -158,6 +115,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
+        private readonly _services: Services,
     ) {
 
     }
@@ -177,8 +135,9 @@ export class CasefileView implements vscode.WebviewViewProvider {
             ],
         };
 
-        await connectWebveiw(webviewView.webview, (view) => this._getHtmlForWebview(view), data => {
-            this._getMessageHandler(data.type)(data);
+        await connectWebview(webviewView.webview, (view) => this._getHtmlForWebview(view), data => {
+            debug(`Received message: %O`, data);
+            dispatchMessage(this, data);
         });
     }
 
@@ -250,20 +209,42 @@ export class CasefileView implements vscode.WebviewViewProvider {
         ]);
     }
 
-    private _getMessageHandler(type: string): (data: any) => any {
-        return (MESSAGE_HANDLERS.get(type)?.handler || ((data) => {
-            console.error(`Invalid message type '${type}' received: %O`, data);
-        })).bind(this);
-    }
-}
+    async [messageHandler(OPEN_BOOKMARK)](data: any) {
+        const { bookmark = {} } = data || {};
+        debug("Starting to look up bookmark %O", bookmark);
+        const targetLocation = await thru(
+            this._services.casefile.keepers,
+            async (keepers) => {
+                for (const keeper of keepers) {
+                    try {
+                        const location = await keeper.bookmarks.currentLocation(bookmark);
+                        location.baseDir = keeper.workingDir;
+                        return location;
+                    } catch (error) {
+                        // continue to next keeper
+                    }
+                }
+                throw new Error(`No bookmark not found in any workspace folder`);
+            }
+        );
+        debug("...bookmark located: %O", targetLocation);
 
-async function connectWebveiw(
-    webview: vscode.Webview,
-    htmlBuilder: ((view: vscode.Webview) => string) | ((view: vscode.Webview) => Promise<string>),
-    receivedMessageHandler: (e: any) => any,
-) {
-    webview.html = await htmlBuilder(webview);
-    webview.onDidReceiveMessage(receivedMessageHandler);
+        const filePath = path.join(targetLocation.baseDir, targetLocation.file);
+        const document = await vscode.workspace.openTextDocument(filePath);
+        const line = document.lineAt(targetLocation.line - 1);
+        // TODO: Determination of selStart and selEnd would ideally normalize whitespace
+        // spans to single space, but back-mapping is more complicated than MVP
+        const selStart = line.text.indexOf(bookmark.markText);
+        const selEnd = selStart >= 0 ? selStart + bookmark.markText.length : 0;
+        await vscode.window.showTextDocument(document, {
+            preserveFocus: false,
+            preview: true,
+            selection: new vscode.Range(
+                new vscode.Position(line.lineNumber, Math.max(0, selStart)),
+                new vscode.Position(line.lineNumber, selEnd)
+            ),
+        });
+    }
 }
 
 function buildString(

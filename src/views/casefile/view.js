@@ -5,8 +5,8 @@ import getMessageHandlers from './receivedMessages';
 import { thru } from 'lodash';
 import { $casefile } from '../../datumPlans';
 import Bookmark from './bookmark';
-import { debug } from '../../debugLog';
 import "./view.css";
+import { MessagePasser } from './messageSending';
 
 const vscode = acquireVsCodeApi();
 
@@ -28,12 +28,14 @@ const View = () => {
     ), []);
 
     return (
-        <div>
-            {...Array.from(
-                $casefile.bookmarks.getIterable(state),
-                bookmark => <Bookmark tree={bookmark} key={bookmark.id}/>
-            )}
-        </div>
+        <MessagePasser value={(data) => {vscode.postMessage(data);}}>
+            <div>
+                {...Array.from(
+                    $casefile.bookmarks.getIterable(state),
+                    bookmark => <Bookmark tree={bookmark} key={bookmark.id}/>
+                )}
+            </div>
+        </MessagePasser>
     );
 };
 

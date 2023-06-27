@@ -1,6 +1,8 @@
 import React from 'preact/compat'; // This just makes VSCode's Intellisense happy
 import { $bookmark } from "../../datumPlans";
+import { OPEN_BOOKMARK } from "../../messageNames";
 import { omit } from 'lodash';
+import { messagePoster } from './messageSending';
 
 const LineRef = ({ bookmark }) => (
     <div className="line-ref">
@@ -15,7 +17,10 @@ const TargetText = ({ bookmark }) => (
 );
 
 const MarkInfo = ({ bookmark }) => {
-    const openThis = () => {};
+    const showInEditor = messagePoster(OPEN_BOOKMARK);
+    const openThis = () => {
+        showInEditor({ bookmark });
+    };
     return (
         $bookmark.file.get(bookmark)
         ? (
