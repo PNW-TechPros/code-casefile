@@ -155,8 +155,16 @@ export class CasefileView implements vscode.WebviewViewProvider {
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
         // BEGIN SAMPLE CODE from https://github.com/microsoft/vscode-extension-samples/blob/2f83557a56c37a5e48943ea0201e1729708690b6/webview-view-sample/src/extension.ts
 
-        const viewUri = (filename: string, {common}: {common?: boolean} = {}) => {
-            const path = common ? ['media'] : ['out', 'casefileView'];
+        const viewUri = (filename: string, {common, module: modRef}: {common?: boolean, module?: Array<string>} = {}) => {
+            const path = thru(null, () => {
+                if (modRef) {
+                    return ['node_modules', ...modRef];
+                }
+                if (common) {
+                    return ['media'];
+                }
+                return ['out', 'casefileView'];
+            });
             return webview.asWebviewUri(
                 vscode.Uri.joinPath(this._extensionUri, ...path, filename)
             );
@@ -169,6 +177,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
         const styleResetUri = viewUri('reset.css', { common: true });
         const styleVSCodeUri = viewUri('vscode.css', { common: true });
         const styleMainUri = viewUri('main.css');
+        const codiconsUri = viewUri('codicon.css', { module: ['@vscode/codicons', 'dist'] })
 
 		// Use a nonce to only allow a specific script to be run.
 		const nonce = getNonce();
@@ -189,6 +198,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
                             `default-src 'none'`,
                             `style-src   ${webview.cspSource}`,
                             `script-src  'nonce-${nonce}'`,
+                            `font-src    ${webview.cspSource}`,
                         ])
                     }],
                     ['meta', {
@@ -196,7 +206,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
                         content: `width=device-width, initial-scale=1.0`
                     }],
 
-                    ...[styleResetUri, styleVSCodeUri, styleMainUri].map(
+                    ...[styleResetUri, styleVSCodeUri, styleMainUri, codiconsUri].map(
                         ssUri => ['link', {rel: 'stylesheet', href: ssUri.toString() }]
                     ),
 
