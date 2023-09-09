@@ -1,8 +1,12 @@
 import React from 'preact/compat'; // This just makes VSCode's Intellisense happy
+import { omit, pick, thru } from 'lodash';
+import { useDrag } from 'react-dnd';
 import { $bookmark } from "../../datumPlans";
 import { OPEN_BOOKMARK } from "../../messageNames";
-import { omit, thru } from 'lodash';
+import { DRAG_TYPES } from './constants';
 import { messagePoster } from './messageSending';
+
+const showInEditor = messagePoster(OPEN_BOOKMARK);
 
 const LineRef = ({ bookmark }) => (
     <div className="line-ref">
@@ -21,8 +25,7 @@ const FOLDING_ICON_MAP = {
     'expanded': 'chevron-down',
     'default': 'blank',
 };
-const MarkInfo = ({ bookmark, folding }) => {
-    const showInEditor = messagePoster(OPEN_BOOKMARK);
+const MarkInfo = ({ bookmark, drag, folding }) => {
     const openThis = () => {
         showInEditor({ bookmark });
     };
@@ -37,7 +40,9 @@ const MarkInfo = ({ bookmark, folding }) => {
         : <h3>{$bookmark.markText.get(bookmark)}</h3>
     );
     const controls = [
-        <i className="codicon codicon-gripper"></i>
+        <span ref={drag}>
+            <i className="codicon codicon-gripper"></i>
+        </span>
     ];
     const foldingIcon = FOLDING_ICON_MAP[folding];
     if (foldingIcon && folding !== 'default') {
@@ -57,7 +62,13 @@ const MarkInfo = ({ bookmark, folding }) => {
 };
 
 const Bookmark = ({ tree: treeNode }) => {
-    // Eventually, this should be a drag source
+    const [{ isDragging }, drag, preview] = useDrag(() => ({
+        type: DRAG_TYPES.BOOKMARK,
+        item: pick(treeNode, ['id']),
+        collect: (monitor) => ({
+            isDragging: Boolean(monitor.isDragging()),
+        }),
+    }));
     const collapsed = $bookmark.collapsed.get(treeNode);
     const shownChildren = (
         collapsed
@@ -77,8 +88,8 @@ const Bookmark = ({ tree: treeNode }) => {
         return 'expanded';
     });
     return (
-        <div className="bookmark">
-            <MarkInfo bookmark={omit(treeNode, ['children'])} {...{ folding }}/>
+        <div ref={preview} className="bookmark">
+            <MarkInfo bookmark={omit(treeNode, ['children'])} {...{ drag, folding }}/>
             {...shownChildren}
         </div>
     );

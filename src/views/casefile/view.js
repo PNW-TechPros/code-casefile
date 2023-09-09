@@ -1,6 +1,8 @@
 import { render } from 'preact';
 import React from 'preact/compat'; // This just makes VSCode's Intellisense happy
 import { useEffect, useState } from 'preact/hooks';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import getMessageHandlers from './receivedMessages';
 import { thru } from 'lodash';
 import { $casefile } from '../../datumPlans';
@@ -29,12 +31,16 @@ const View = () => {
 
     return (
         <MessagePasser value={(data) => {vscode.postMessage(data);}}>
-            <div>
-                {...Array.from(
-                    $casefile.bookmarks.getIterable(state),
-                    bookmark => <Bookmark tree={bookmark} key={bookmark.id}/>
-                )}
-            </div>
+            <DndProvider backend={HTML5Backend}>
+                <div className="casefile-ui">
+                    <div className="bookmarks-forest">
+                        {...Array.from(
+                            $casefile.bookmarks.getIterable(state),
+                            bookmark => <Bookmark tree={bookmark} key={bookmark.id}/>
+                        )}
+                    </div>
+                </div>
+            </DndProvider>
         </MessagePasser>
     );
 };
