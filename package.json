@@ -81,6 +81,8 @@
     "git-casefile": "^1.0.5",
     "lodash": "^4.17.21",
     "natural-lenses": "^2.3.1",
-    "preact": "^10.15.0"
+    "preact": "^10.15.0",
+    "react": "npm:@preact/compat",
+    "react-dom": "npm:@preact/compat"
   }
 }
