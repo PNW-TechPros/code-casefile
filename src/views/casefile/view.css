@@ -27,3 +27,14 @@
     grid-area: node-content;
     margin-bottom: 0.4em;
 }
+
+.casefile-ui .bookmark-trash {
+    display: flex;
+    align-items: self-start;
+    background-color: darkred;
+    padding: 3px;
+}
+
+.casefile-ui .bookmark-trash div {
+    margin: auto;
+}
