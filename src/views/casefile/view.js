@@ -36,6 +36,8 @@ const useDragging = () => {
     return [dragging, dragWatcher];
 };
 
+const Null = ({ children }) => (<>{ children }</>);
+
 const View = () => {
     const [state, setState] = thru(
         useState(vscode.getState() || {}),
@@ -55,7 +57,7 @@ const View = () => {
                             bookmark => <Bookmark tree={bookmark} key={bookmark.id}/>
                         )}
                     </div>
-                    <EnterAndExitTransition
+                    <Null
                         triggerEnter={dragging}
                         triggerExit={!dragging}
                         transitionNameEnter='slideInDown'
@@ -64,7 +66,7 @@ const View = () => {
                         <div className="bookmark-trash">
                             <div><i className="codicon codicon-trash"></i><span> Remove</span></div>
                         </div>
-                    </EnterAndExitTransition>
+                    </Null>
                 </div>
             </DndProvider>
         </MessagePasser>
