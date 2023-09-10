@@ -1,7 +1,7 @@
 import { render } from 'preact';
 import React from 'preact/compat'; // This just makes VSCode's Intellisense happy
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { DndProvider } from 'react-dnd';
+import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { applicationOfMessagesToState } from './receivedMessages';
 import { thru } from 'lodash';
@@ -9,7 +9,9 @@ import { EnterAndExitTransition } from '@devclusters/fluency';
 import { $casefile } from '../../datumPlans';
 import Bookmark from './bookmark';
 import "./view.css";
-import { MessagePasser } from './messageSending';
+import { MessagePasser, messagePoster } from './messageSending';
+import { DRAG_TYPES } from './constants';
+import { DELETE_BOOKMARK } from '../../messageNames';
 
 const vscode = acquireVsCodeApi();
 
@@ -34,6 +36,22 @@ const useDragging = () => {
     }, []);
 
     return [dragging, dragWatcher];
+};
+
+const Trash = () => {
+    const deleteBookmark = messagePoster(DELETE_BOOKMARK);
+    const [, trashDrop] = useDrop(() => ({
+        accept: [DRAG_TYPES.BOOKMARK],
+        drop: ({ itemPath }) => {
+            deleteBookmark({ itemPath });
+        },
+    }));
+
+    return (
+        <div className="bookmark-trash" ref={trashDrop}>
+            <div><i className="codicon codicon-trash"></i><span> Remove</span></div>
+        </div>
+    );
 };
 
 const View = () => {
@@ -61,9 +79,7 @@ const View = () => {
                         transitionNameEnter='slideInDown'
                         transitionNameExit='slideOutUp'
                     >
-                        <div className="bookmark-trash">
-                            <div><i className="codicon codicon-trash"></i><span> Remove</span></div>
-                        </div>
+                        <Trash/>
                     </EnterAndExitTransition>
                 </div>
             </DndProvider>
