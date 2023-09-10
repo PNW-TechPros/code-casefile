@@ -5,6 +5,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { applicationOfMessagesToState } from './receivedMessages';
 import { thru } from 'lodash';
+import { EnterAndExitTransition } from '@devclusters/fluency';
 import { $casefile } from '../../datumPlans';
 import Bookmark from './bookmark';
 import "./view.css";
@@ -54,11 +55,16 @@ const View = () => {
                             bookmark => <Bookmark tree={bookmark} key={bookmark.id}/>
                         )}
                     </div>
-                    { dragging && (
+                    <EnterAndExitTransition
+                        triggerEnter={dragging}
+                        triggerExit={!dragging}
+                        transitionNameEnter='slideInDown'
+                        transitionNameExit='slideOutUp'
+                    >
                         <div className="bookmark-trash">
-                            <div><i className="codicon codicon-trash"></i> Remove</div>
+                            <div><i className="codicon codicon-trash"></i><span> Remove</span></div>
                         </div>
-                    )}
+                    </EnterAndExitTransition>
                 </div>
             </DndProvider>
         </MessagePasser>

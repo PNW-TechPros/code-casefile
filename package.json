@@ -76,6 +76,7 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@devclusters/fluency": "^1.1.5",
     "@thi.ng/hiccup": "^4.2.41",
     "@vscode/codicons": "^0.0.33",
     "git-casefile": "^1.0.5",

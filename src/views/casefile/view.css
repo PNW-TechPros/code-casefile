@@ -28,13 +28,30 @@
     margin-bottom: 0.4em;
 }
 
+.casefile-ui {
+    position: relative;
+}
+
+.casefile-ui .bookmarks-forest {
+    position: relative;
+    z-index: 30;
+    background-color: var(--vscode-sideBar-background);
+}
+
 .casefile-ui .bookmark-trash {
     display: flex;
     align-items: self-start;
     background-color: darkred;
     padding: 3px;
+    position: relative;
+    z-index: 40;
 }
 
 .casefile-ui .bookmark-trash div {
     margin: auto;
+}
+
+body {
+    background-color: transparent;
+    padding-left: 1em;
 }

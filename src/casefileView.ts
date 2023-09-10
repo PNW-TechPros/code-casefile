@@ -177,7 +177,8 @@ export class CasefileView implements vscode.WebviewViewProvider {
         const styleResetUri = viewUri('reset.css', { common: true });
         const styleVSCodeUri = viewUri('vscode.css', { common: true });
         const styleMainUri = viewUri('main.css');
-        const codiconsUri = viewUri('codicon.css', { module: ['@vscode/codicons', 'dist'] })
+        const codiconsUri = viewUri('codicon.css', { module: ['@vscode/codicons', 'dist'] });
+        const animateUri = viewUri('animate.min.css', { module: ['animate.css'] });
 
 		// Use a nonce to only allow a specific script to be run.
 		const nonce = getNonce();
@@ -206,7 +207,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
                         content: `width=device-width, initial-scale=1.0`
                     }],
 
-                    ...[styleResetUri, styleVSCodeUri, styleMainUri, codiconsUri].map(
+                    ...[styleResetUri, styleVSCodeUri, styleMainUri, codiconsUri, animateUri].map(
                         ssUri => ['link', {rel: 'stylesheet', href: ssUri.toString() }]
                     ),
 
