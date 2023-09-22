@@ -1,11 +1,13 @@
 import { randomBytes } from 'crypto';
 import * as vscode from 'vscode';
 import { debug } from './debugLog';
-import { OPEN_BOOKMARK } from './messageNames';
+import { DELETE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL } from './messageNames';
 import Services from './services';
 import { connectWebview, dispatchMessage, messageHandler } from './webviewHelper';
-import { thru } from 'lodash';
+import { cloneDeep, thru } from 'lodash';
 import path = require('path');
+import type { Bookmark } from './Bookmark';
+import type { Casefile } from './Casefile';
 
 const sampleCasefile = {
     "bookmarks": [
@@ -89,18 +91,10 @@ const sampleCasefile = {
     "path": "casefile-basics/bdc74313-639c-490f-aab2-dc05e0bccf97"
 };
 
-type Bookmark = {
-    children?: Bookmark[],
-    file?: string,
-    line?: number,
-    markText?: string,
-    notes?: string,
-    peg?: {
-        commit: string,
-        line: number | string,
-    },
-    id?: string,
-    collapsed?: boolean,
+type MarkPathStep = {
+    index: number,
+    mark: Bookmark,
+    in: Bookmark[],
 };
 
 export class CasefileView implements vscode.WebviewViewProvider {
@@ -112,6 +106,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
             debug("Deserializing casefile view webview panel");
         }
     };
+    private _casefile: any;
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
@@ -142,14 +137,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
     }
 
     async loadCannedCasefileData({ onFail }: { onFail?: (msg: string) => void } = {}): Promise<void> {
-        if (!this._view) {
-            if (onFail) {
-                onFail("CasefileView not yet resolved");
-            }
-            return;
-        }
-
-        this._view.webview.postMessage({ type: 'setViewState', value: sampleCasefile });
+        await this._setCasefileContent(cloneDeep(sampleCasefile), { onFail });
     }
 
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
@@ -220,6 +208,32 @@ export class CasefileView implements vscode.WebviewViewProvider {
         ]);
     }
 
+    private _setCasefileContent(stateValue: Casefile, { onFail }: { onFail?: (msg: string) => void } = {}) {
+        this._casefile = stateValue;
+        if (!this._view) {
+            onFail?.("CasefileView not yet resolved");
+            return;
+        }
+
+        this._services.setCurrentForest(stateValue);
+        this._view.webview.postMessage({ type: 'setViewState', value: stateValue });
+    }
+
+    private _modifyCasefileContent(fn: (casefile: Casefile) => boolean) {
+        const casefile = this._services.getCurrentForest();
+        const indicator = fn(casefile);
+        if (indicator !== false) {
+            this._setCasefileContent(casefile);
+        }
+    }
+
+    async [messageHandler(REQUEST_INITIAL_FILL)](data: any) {
+        const content = this._services.getCurrentForest();
+        await this._setCasefileContent(content, {
+            onFail(msg) { console.error(msg); },
+        });
+    }
+
     async [messageHandler(OPEN_BOOKMARK)](data: any) {
         const { bookmark = {} } = data || {};
         debug("Starting to look up bookmark %O", bookmark);
@@ -235,7 +249,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
                         // continue to next keeper
                     }
                 }
-                throw new Error(`No bookmark not found in any workspace folder`);
+                throw new Error(`Bookmark not found in any workspace folder`);
             }
         );
         debug("...bookmark located: %O", targetLocation);
@@ -256,6 +270,25 @@ export class CasefileView implements vscode.WebviewViewProvider {
             ),
         });
     }
+
+    async [messageHandler(DELETE_BOOKMARK)](data: any) {
+        const { itemPath = [] } = data || {};
+        debug("Starting to delete bookmark %O", data);
+        this._modifyCasefileContent((casefile) => {
+            const bookmarkForest = casefile.bookmarks || [];
+            const modPath = getMarkPath(bookmarkForest, itemPath);
+            debug("Resolved itemPath %O to effective path %O", itemPath, modPath);
+            if (modPath.length === 0) {
+                return false;
+            }
+            const { index: delIndex, in: markList } = modPath.pop() || {};
+            if (delIndex === undefined) {
+                return false;
+            }
+            markList?.splice(delIndex, 1);
+            return true;
+        });
+    }
 }
 
 function buildString(
@@ -272,4 +305,18 @@ function buildString(
 
 function getNonce() : string {
     return randomBytes(16).toString('base64');
+}
+
+function getMarkPath(state: Bookmark[], ids: string[]) : MarkPathStep[] {
+    const result : MarkPathStep[] = [];
+    let level = state;
+    for (const step of ids) {
+        const i = level.findIndex((mark) => mark.id === step);
+        if (i < 0) {
+            return [];
+        }
+        result.push({ index: i, mark: level[i], in: level });
+        level = level[i].children || [];
+    }
+    return result;
 }

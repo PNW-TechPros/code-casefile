@@ -11,9 +11,22 @@ import Bookmark from './bookmark';
 import "./view.css";
 import { MessagePasser, messagePoster } from './messageSending';
 import { DRAG_TYPES } from './constants';
-import { DELETE_BOOKMARK } from '../../messageNames';
+import { DELETE_BOOKMARK, REQUEST_INITIAL_FILL } from '../../messageNames';
 
 const vscode = acquireVsCodeApi();
+
+const BindMessageHandling = ({ stateManagement }) => {
+    useEffect(applicationOfMessagesToState(...stateManagement), []);
+    return null;
+};
+
+const RequestInitialData = ({ children }) => {
+    const requestInitialData = messagePoster(REQUEST_INITIAL_FILL);
+    useEffect(() => {
+        requestInitialData({});
+    }, []);
+    return <>{ children }</>;
+};
 
 const useDragging = () => {
     const [dragging, setDragging] = useState(false);
@@ -55,16 +68,14 @@ const Trash = () => {
 };
 
 const View = () => {
-    const [state, setState] = thru(
-        useState(vscode.getState() || {}),
-        ([state, setState]) => [state, (newState) => {setState(newState); vscode.setState(newState);}]
-    );
-    useEffect(applicationOfMessagesToState(state, setState), []);
-
     const [dragging, dragWatcherRef] = useDragging();
+    const stateManagement = useState({}), [ state ] = stateManagement;
 
     return (
         <MessagePasser value={(data) => {vscode.postMessage(data);}}>
+            <RequestInitialData>
+                <BindMessageHandling {...{ stateManagement }} />
+            </RequestInitialData>
             <DndProvider backend={HTML5Backend}>
                 <div className="casefile-ui" ref={dragWatcherRef}>
                     <div className="bookmarks-forest">

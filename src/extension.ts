@@ -2,6 +2,9 @@ import * as vscode from 'vscode';
 import { CasefileView } from './casefileView';
 import GitCasefile from './services/gitCasefile';
 import Services from './services';
+import { Casefile } from './Casefile';
+
+const PERSISTENT_STATE_PROPERTY = 'casefile';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -16,6 +19,8 @@ export function activate(context: vscode.ExtensionContext) {
 			)
 			|| []
 		),
+		getCurrentForest: () => context.workspaceState.get<Casefile>(PERSISTENT_STATE_PROPERTY) ?? {},
+		setCurrentForest: (casefile) => context.workspaceState.update(PERSISTENT_STATE_PROPERTY, casefile),
 	});
 
 	subscribe(vscode.workspace.onDidChangeConfiguration(e => {
