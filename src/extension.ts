@@ -2,6 +2,10 @@ import * as vscode from 'vscode';
 import { CasefileView } from './casefileView';
 import GitCasefile from './services/gitCasefile';
 import Services from './services';
+import { Casefile } from './Casefile';
+import { debug } from './debugLog';
+
+const PERSISTENT_STATE_PROPERTY = 'casefile';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -16,6 +20,8 @@ export function activate(context: vscode.ExtensionContext) {
 			)
 			|| []
 		),
+		getCurrentForest: () => context.workspaceState.get<Casefile>(PERSISTENT_STATE_PROPERTY) ?? {},
+		setCurrentForest: (casefile) => context.workspaceState.update(PERSISTENT_STATE_PROPERTY, casefile),
 	});
 
 	subscribe(vscode.workspace.onDidChangeConfiguration(e => {
@@ -39,11 +45,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
-	subscribe(vscode.commands.registerCommand('code-casefile.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from VSCode Casefile!');
-	}));
+	
+	// This is a temporary command until we have "casefile sharing" implemented
 	subscribe(vscode.commands.registerCommand('codeCasefile.loadCannedCasefile', () => {
 		casefileView.loadCannedCasefileData({
 			onFail: (msg) => {
@@ -51,6 +54,13 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		});
 	}));
+
+	subscribe(
+		vscode.commands.registerCommand('codeCasefile.deleteBookmark', ({ itemPath }) => {
+			debug("deleteBookmark command executed: %o", itemPath);
+			casefileView.deleteBookmark(itemPath);
+		}),
+	);
 }
 
 // This method is called when your extension is deactivated

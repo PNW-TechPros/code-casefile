@@ -32,9 +32,29 @@
     "commands": [
       {
         "command": "codeCasefile.loadCannedCasefile",
-        "title": "Casefile: Load canned casefile data"
+        "title": "Load canned casefile data",
+        "category": "Casefile"
+      },
+      {
+        "command": "codeCasefile.deleteBookmark",
+        "title": "Delete bookmark",
+        "category": "Casefile"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "codeCasefile.deleteBookmark",
+          "when": "false"
+        }
+      ],
+      "webview/context": [
+        {
+          "command": "codeCasefile.deleteBookmark",
+          "when": "webviewId == 'codeCasefile.casefileView' && webviewArea == 'bookmark'"
+        }
+      ]
+    },
     "views": {
       "explorer": [
         {
@@ -76,10 +96,16 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@devclusters/fluency": "^1.1.5",
     "@thi.ng/hiccup": "^4.2.41",
+    "@vscode/codicons": "^0.0.33",
     "git-casefile": "^1.0.5",
     "lodash": "^4.17.21",
     "natural-lenses": "^2.3.1",
-    "preact": "^10.15.0"
+    "preact": "^10.15.0",
+    "react": "npm:@preact/compat",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dom": "npm:@preact/compat"
   }
 }

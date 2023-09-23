@@ -6,7 +6,7 @@ export const $casefile = datumPlan(({ VALUE }) => ({
 }));
 
 export const $bookmark = datumPlan(({ VALUE }) => ({
-    children: [], // Each item should adhere to $bookmark
+    children: [{}], // Each item should adhere to $bookmark
     file: VALUE,
     line: VALUE,
     markText: VALUE,

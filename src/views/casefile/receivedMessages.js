@@ -1,3 +1,5 @@
+import { thru } from 'lodash';
+
 const MESSAGE_HANDLERS = new Map();
 function handleExtensionMessage(type, handler) {
     const existing = MESSAGE_HANDLERS.get(type);
@@ -27,6 +29,20 @@ const getMessageHandlers = ({ context }) => {
 };
 
 export default getMessageHandlers;
+
+export const applicationOfMessagesToState = (state, setState) => {
+    return () => thru(
+        getMessageHandlers({ context: { getState: () => state, setState } }),
+        handlers => {
+            const handleEvent = (event) => {
+                handlers.dispatch(event.data);
+            };
+            window.addEventListener('message', handleEvent);
+            return () => window.removeEventListener('message', handleEvent);
+        }
+    );
+};
+
 
 ///////////////////////// MESSAGE HANDLERS /////////////////////////
 

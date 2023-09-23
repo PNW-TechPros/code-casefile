@@ -1,15 +1,57 @@
-.bookmark {
-    margin-bottom: 0.4em;
-}
-
-.bookmark-children {
-    padding-left: 1em;
-}
-
 .line-ref {
     font-style: italic;
 }
 
 .tagged-content {
     font-weight: bold;
+}
+
+.bookmark {
+    display: grid;
+    grid-template-columns: [gutter-start] 1.5em [gutter-end content-start] auto [content-end];
+    grid-template-rows: [self-start] auto [self-end children-start] auto [children-end];
+    grid-template-areas:    "controls node-content"
+                            "indent   children";
+    /* When nested, appears in "children" */
+    grid-area: children;
+}
+
+.bookmark > .controls {
+    grid-area: controls;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.bookmark > .content {
+    grid-area: node-content;
+    margin-bottom: 0.4em;
+}
+
+.casefile-ui {
+    position: relative;
+}
+
+.casefile-ui .bookmarks-forest {
+    position: relative;
+    z-index: 30;
+    background-color: var(--vscode-sideBar-background);
+}
+
+.casefile-ui .bookmark-trash {
+    display: flex;
+    align-items: self-start;
+    background-color: darkred;
+    padding: 3px;
+    position: relative;
+    z-index: 40;
+}
+
+.casefile-ui .bookmark-trash div {
+    margin: auto;
+}
+
+body {
+    background-color: transparent;
+    padding-left: 1em;
 }
