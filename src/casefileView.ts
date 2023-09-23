@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import * as vscode from 'vscode';
 import { debug } from './debugLog';
-import { DELETE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL } from './messageNames';
+import { DELETE_BOOKMARK, MOVE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL } from './messageNames';
 import Services from './services';
 import { connectWebview, dispatchMessage, messageHandler } from './webviewHelper';
 import { cloneDeep, thru } from 'lodash';
@@ -143,8 +143,8 @@ export class CasefileView implements vscode.WebviewViewProvider {
         await this._setCasefileContent(cloneDeep(sampleCasefile), { onFail });
     }
 
-	deleteBookmark(itemPath: string[]) {
-		this._modifyCasefileContent(async (casefile) => {
+	deleteBookmark(itemPath: string[]): Promise<boolean> {
+		return this._modifyCasefileContent(async (casefile) => {
             const bookmarkForest = casefile.bookmarks || [];
             const modPath = getMarkPath(bookmarkForest, itemPath);
             if (modPath.length === 0) {
@@ -323,10 +323,48 @@ export class CasefileView implements vscode.WebviewViewProvider {
         });
     }
 
+    async [messageHandler(MOVE_BOOKMARK)](data: any): Promise<void> {
+        const { subject, newParent: newParentPath, position } = data || {};
+        this._modifyCasefileContent((casefile) => {
+            if (!casefile.bookmarks) {
+                casefile.bookmarks = [];
+            }
+            const bookmarkForest = casefile.bookmarks;
+
+            const movingMarkPath = getMarkPath(bookmarkForest, subject);
+            const { index: delIndex, in: previousFamily } = movingMarkPath.pop() || {};
+            const  movingMark = previousFamily?.[delIndex || 0];
+            if (delIndex === undefined || movingMark === undefined) {
+                return false;
+            }
+
+            const { mark: newParent } = getMarkPath(bookmarkForest, newParentPath).pop() || {};
+            if (newParent === undefined) {
+                return false;
+            }
+            const insertIndex = (
+                position
+                ? newParent.children?.findIndex(
+                    (mark) => mark.id === (position.before || position.after)
+                ) || 0
+                : 0
+            ) + (position?.after ? 1 : 0);
+
+            debug("Moving mark at index %d from %o to index %d of %o", delIndex, previousFamily, insertIndex, newParent.children);
+            previousFamily?.splice(delIndex, 1);
+            if (!newParent.children) {
+                newParent.children = [];
+            }
+            newParent.children.splice(insertIndex, 0, movingMark);
+            debug("Old family: %o; new family: %o", previousFamily, newParent.children);
+            return true;
+        });
+    }
+
     async [messageHandler(DELETE_BOOKMARK)](data: any): Promise<void> {
         const { itemPath = [] } = data || {};
         debug("Starting to delete bookmark %O", data);
-        this._modifyCasefileContent((casefile) => {
+        await this._modifyCasefileContent((casefile) => {
             const bookmarkForest = casefile.bookmarks || [];
             const modPath = getMarkPath(bookmarkForest, itemPath);
             debug("Resolved itemPath %O to effective path %O", itemPath, modPath);

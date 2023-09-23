@@ -9,11 +9,10 @@
 .bookmark-tree {
     display: grid;
     grid-template-columns: [gutter-start] 1.5em [gutter-end content-start] auto [content-end];
-    grid-template-rows: [self-start] auto [self-end children-start] auto [children-end];
-    grid-template-areas:    "bookmark bookmark"
-                            "indent   children";
-    /* When nested, appears in "children" */
-    grid-area: children;
+    grid-template-rows: [self-start] auto [self-end] auto;
+    grid-template-areas:    "bookmark bookmark";
+    /* When nested, appears in "content" column-span */
+    grid-column: content;
 }
 
 .bookmark-tree > .bookmark {
