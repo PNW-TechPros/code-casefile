@@ -97,6 +97,9 @@ type MarkPathStep = {
     in: Bookmark[],
 };
 
+const DELETE_SUBTREE = "Eliminate subtree";
+const PROMOTE_CHILDREN = "Promote child marks";
+
 export class CasefileView implements vscode.WebviewViewProvider {
     public static readonly viewType = 'codeCasefile.casefileView';
     
@@ -139,6 +142,40 @@ export class CasefileView implements vscode.WebviewViewProvider {
     async loadCannedCasefileData({ onFail }: { onFail?: (msg: string) => void } = {}): Promise<void> {
         await this._setCasefileContent(cloneDeep(sampleCasefile), { onFail });
     }
+
+	deleteBookmark(itemPath: string[]) {
+		this._modifyCasefileContent(async (casefile) => {
+            const bookmarkForest = casefile.bookmarks || [];
+            const modPath = getMarkPath(bookmarkForest, itemPath);
+            if (modPath.length === 0) {
+                return false;
+            }
+            const { index: delIndex, in: markList, mark } = modPath.pop() || {};
+            if (delIndex === undefined) {
+                return false;
+            }
+            const substitutions: Bookmark[] = [];
+            if (mark?.children?.length) {
+                const choice = await vscode.window.showWarningMessage(
+                    "The selected bookmark has children",
+                    {
+                        modal: true,
+                        detail: "All descendant marks of the selected bookmark will also be deleted.",
+                    },
+                    DELETE_SUBTREE,
+                );
+                switch (choice) {
+                    case undefined:
+                        return false;
+                    // case PROMOTE_CHILDREN:
+                    //     substitutions.push(...mark.children);
+                    //     break;
+                }
+            }
+            markList?.splice(delIndex, 1, ...substitutions);
+            return true;
+        });
+	}
 
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
         // BEGIN SAMPLE CODE from https://github.com/microsoft/vscode-extension-samples/blob/2f83557a56c37a5e48943ea0201e1729708690b6/webview-view-sample/src/extension.ts
@@ -219,22 +256,37 @@ export class CasefileView implements vscode.WebviewViewProvider {
         this._view.webview.postMessage({ type: 'setViewState', value: stateValue });
     }
 
-    private _modifyCasefileContent(fn: (casefile: Casefile) => boolean) {
-        const casefile = this._services.getCurrentForest();
-        const indicator = fn(casefile);
-        if (indicator !== false) {
-            this._setCasefileContent(casefile);
-        }
+    private _modifyCasefileContent(fn: (casefile: Casefile) => (boolean | Promise<boolean>)): Promise<boolean> {
+        const casefile = this._getCasefileContent();
+        return Promise.resolve()
+        .then(() => fn(casefile))
+        .then(
+            (indicator) => {
+                if (indicator !== false) {
+                    this._setCasefileContent(casefile);
+                }
+                return true;
+            },
+
+            (error) => {
+                console.error(error);
+                return false;
+            }
+        );
     }
 
-    async [messageHandler(REQUEST_INITIAL_FILL)](data: any) {
+    private _getCasefileContent() {
+        return this._services.getCurrentForest();
+    }
+
+    async [messageHandler(REQUEST_INITIAL_FILL)](data: any): Promise<void> {
         const content = this._services.getCurrentForest();
         await this._setCasefileContent(content, {
             onFail(msg) { console.error(msg); },
         });
     }
 
-    async [messageHandler(OPEN_BOOKMARK)](data: any) {
+    async [messageHandler(OPEN_BOOKMARK)](data: any): Promise<void> {
         const { bookmark = {} } = data || {};
         debug("Starting to look up bookmark %O", bookmark);
         const targetLocation = await thru(
@@ -271,7 +323,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
         });
     }
 
-    async [messageHandler(DELETE_BOOKMARK)](data: any) {
+    async [messageHandler(DELETE_BOOKMARK)](data: any): Promise<void> {
         const { itemPath = [] } = data || {};
         debug("Starting to delete bookmark %O", data);
         this._modifyCasefileContent((casefile) => {

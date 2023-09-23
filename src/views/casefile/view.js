@@ -11,6 +11,7 @@ import Bookmark from './bookmark';
 import "./view.css";
 import { MessagePasser, messagePoster } from './messageSending';
 import { DRAG_TYPES } from './constants';
+import { vscontext, NO_STD_CMENU_ENTRIES } from '../helpers';
 import { DELETE_BOOKMARK, REQUEST_INITIAL_FILL } from '../../messageNames';
 
 const vscode = acquireVsCodeApi();
@@ -77,7 +78,7 @@ const View = () => {
                 <BindMessageHandling {...{ stateManagement }} />
             </RequestInitialData>
             <DndProvider backend={HTML5Backend}>
-                <div className="casefile-ui" ref={dragWatcherRef}>
+                <div className="casefile-ui" ref={dragWatcherRef} {...vscontext(NO_STD_CMENU_ENTRIES)}>
                     <div className="bookmarks-forest">
                         {...Array.from(
                             $casefile.bookmarks.getIterable(state),

@@ -5,6 +5,7 @@ import { $bookmark } from "../../datumPlans";
 import { OPEN_BOOKMARK } from "../../messageNames";
 import { DRAG_TYPES } from './constants';
 import { messagePoster } from './messageSending';
+import { vscontext } from '../helpers';
 
 const LineRef = ({ bookmark }) => (
     <div className="line-ref">
@@ -32,7 +33,14 @@ const MarkInfo = ({ bookmark, ancestors = [], drag, folding }) => {
     const markContent = (
         $bookmark.file.get(bookmark)
         ? (
-            <div onClick={openThis}>
+            <div
+                {...vscontext({
+                    webviewArea: 'bookmark',
+                    itemPath: [...ancestors, bookmark.id],
+                    hasChildMarks: Boolean(bookmark.children?.length),
+                })}
+                onClick={openThis}
+            >
                 <LineRef bookmark={bookmark}/>
                 <TargetText bookmark={bookmark}/>
             </div>

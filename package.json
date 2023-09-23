@@ -32,9 +32,29 @@
     "commands": [
       {
         "command": "codeCasefile.loadCannedCasefile",
-        "title": "Casefile: Load canned casefile data"
+        "title": "Load canned casefile data",
+        "category": "Casefile"
+      },
+      {
+        "command": "codeCasefile.deleteBookmark",
+        "title": "Delete bookmark",
+        "category": "Casefile"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "codeCasefile.deleteBookmark",
+          "when": "false"
+        }
+      ],
+      "webview/context": [
+        {
+          "command": "codeCasefile.deleteBookmark",
+          "when": "webviewId == 'codeCasefile.casefileView' && webviewArea == 'bookmark'"
+        }
+      ]
+    },
     "views": {
       "explorer": [
         {
