@@ -20,7 +20,7 @@ const TargetText = ({ bookmark }) => (
     </div>
 );
 
-const insertionFromClientCoords = ({x, y}, { controls, content }) => {
+export const insertionFromClientCoords = ({x, y}, { controls, content }) => {
     try {
         if (controls.left <= x && x < controls.right) {
             const midLineY = (controls.top + controls.bottom) / 2;

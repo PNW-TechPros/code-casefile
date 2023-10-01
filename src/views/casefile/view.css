@@ -49,6 +49,17 @@
     background-color: var(--vscode-sideBar-background);
 }
 
+.casefile-ui .drop-shadow {
+    position: fixed;
+    top: -20px;
+    z-index: 50;
+    height: 6px;
+    pointer-events: none;
+    border-radius: 3px;
+    background-color: white;
+    opacity: 0.5;
+}
+
 .casefile-ui .bookmark-trash {
     display: flex;
     align-items: self-start;
