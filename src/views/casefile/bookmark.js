@@ -102,14 +102,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
     const markContent = (
         $bookmark.file.get(bookmark)
         ? (
-            <div
-                {...vscontext({
-                    webviewArea: 'bookmark',
-                    itemPath: [...ancestors, bookmark.id],
-                    hasChildMarks: Boolean(bookmark.children?.length),
-                })}
-                onClick={openThis}
-            >
+            <div onClick={openThis}>
                 <LineRef bookmark={bookmark}/>
                 <TargetText bookmark={bookmark}/>
             </div>
@@ -129,7 +122,15 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
     }
 
     return (
-        <div className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`} ref={drop}>
+        <div
+            className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`}
+            ref={drop}
+            {...vscontext({
+                webviewArea: 'bookmark',
+                itemPath: [...ancestors, bookmark.id],
+                hasChildMarks: Boolean(bookmark.children?.length),
+            })}
+        >
             <div className="controls" ref={controlsDom}>{controls}</div>
             <div className="content" ref={contentDom}>
                 {markContent}

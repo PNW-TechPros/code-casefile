@@ -120,18 +120,33 @@ const Bookmarks = ({ state }) => {
         if (!dropShadowElt) {
             return;
         }
-        // Obtain bookmark from *dragHover* with `document.elementFromPoint()` and traverse up to `.bookmark` element
+        // Obtain bookmark from *dragHover* with `document.elementFromPoint()`
+        // and traverse up to `.bookmark` element
         const bookmarkElt = dragHover && getDropTargetElement(dragHover);
         let shadowStyleAttrs = { top: '' };
-        if (dragHover && bookmarkElt) {
-            // Obtain client-coord DomRects for the `.controls` and `.content` children of the bookmark element and the overall bookmark
-            const elementRects = getBookmarkRects(bookmarkElt);
-            // Compute target shadow location
-            shadowStyleAttrs = computeDestShadowLocation({
-                dragHover,
-                elementRects,
-                shadowHeight: dropShadowElt.offsetHeight,
-            });
+        const dragItem = (
+            (dragMonitor.getItemType() === DRAG_TYPES.BOOKMARK)
+            ? dragMonitor.getItem()
+            : null
+        );
+        if (dragHover && bookmarkElt && dragItem) {
+            // Check if dragItem.id is present in itemPath of bookmarkElt -- 
+            // and do not position drop shadow if so
+            const draggedItemPathIndex = JSON.parse(
+                bookmarkElt.dataset?.vscodeContext || '{}'
+            )?.itemPath.indexOf(dragItem.id);
+            if (draggedItemPathIndex < 0) {
+                // Obtain client-coord DomRects for the `.controls` and
+                // `.content` children of the bookmark element and the
+                // overall bookmark
+                const elementRects = getBookmarkRects(bookmarkElt);
+                // Compute target shadow location
+                shadowStyleAttrs = computeDestShadowLocation({
+                    dragHover,
+                    elementRects,
+                    shadowHeight: dropShadowElt.offsetHeight,
+                });
+            }
         }
         // Move the shadow to the location
         Object.assign(dropShadowElt.style, shadowStyleAttrs);
