@@ -338,7 +338,11 @@ export class CasefileView implements vscode.WebviewViewProvider {
                 return false;
             }
 
-            const { mark: newParent } = getMarkPath(bookmarkForest, newParentPath).pop() || {};
+            const newParent = (
+                newParentPath.length
+                ? getMarkPath(bookmarkForest, newParentPath).pop()?.mark
+                : { children: bookmarkForest }
+            );
             if (newParent === undefined) {
                 return false;
             }
