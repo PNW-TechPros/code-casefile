@@ -55,7 +55,7 @@ const FOLDING_ICON_MAP = {
     'expanded': 'chevron-down',
     'default': 'blank',
 };
-const MarkInfo = ({ bookmark, ancestors = [], drag, folding }) => {
+const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
     // The `messagePoster`s have to be instantiated here because they `useContext`
     const showInEditor = messagePoster(OPEN_BOOKMARK);
     const moveBookmark = messagePoster(MOVE_BOOKMARK);
@@ -129,7 +129,7 @@ const MarkInfo = ({ bookmark, ancestors = [], drag, folding }) => {
     }
 
     return (
-        <div className="bookmark" ref={drop}>
+        <div className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`} ref={drop}>
             <div className="controls" ref={controlsDom}>{controls}</div>
             <div className="content" ref={contentDom}>
                 {markContent}
@@ -138,7 +138,7 @@ const MarkInfo = ({ bookmark, ancestors = [], drag, folding }) => {
     );
 };
 
-const Bookmark = ({ tree: treeNode, ancestors = [] }) => {
+const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) => {
     const nodeIdPath = [...ancestors, treeNode.id];
     const [{ isDragging }, drag, preview] = useDrag(() => ({
         type: DRAG_TYPES.BOOKMARK,
@@ -154,7 +154,12 @@ const Bookmark = ({ tree: treeNode, ancestors = [] }) => {
         : Array.from(
             $bookmark.children.getIterable(treeNode),
             subTree => (
-                <Bookmark tree={subTree} key={subTree.id} ancestors={nodeIdPath}/>
+                <Bookmark
+                    tree={subTree}
+                    key={subTree.id}
+                    ancestors={nodeIdPath}
+                    ancestorDragging={ancestorDragging || isDragging}
+                />
             )
         )
     );
@@ -171,6 +176,7 @@ const Bookmark = ({ tree: treeNode, ancestors = [] }) => {
         <div ref={preview} className="bookmark-tree">
             <MarkInfo
                 bookmark={omit(treeNode, ['children'])}
+                dragging={ancestorDragging || isDragging}
                 {...{ ancestors, drag, folding }}
             />
             {...shownChildren}

@@ -25,6 +25,10 @@
     grid-template-areas: "controls content";
 }
 
+.dragging-bookmark {
+    opacity: 0.5;
+}
+
 .bookmark > .controls {
     /* grid-area: controls; */
     grid-column: controls-start / controls-end;
