@@ -70,10 +70,12 @@ const getBookmarkRects = (bookmarkElt) => {
         className,
         childrenByClass[className]?.getBoundingClientRect?.()
     ]));
+    const treeElt = bookmarkElt.closest('.bookmark-tree');
 
     return {
         ...childRects,
         bookmark: bookmarkElt.getBoundingClientRect(),
+        tree: treeElt.getBoundingClientRect(),
     };
 };
 
@@ -96,7 +98,7 @@ const computeDestShadowLocation = ({ dragHover, elementRects, shadowHeight }) =>
         return styleAttrs({
             xParams: elementRects.bookmark,
             // May want to change this to the bottom of the closest ".bookmark-tree"
-            y: elementRects.bookmark.bottom,
+            y: elementRects.tree.bottom,
         });
     } else if (insertAs?.child) {
         return styleAttrs({
