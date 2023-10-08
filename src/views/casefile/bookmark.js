@@ -1,8 +1,9 @@
 import React from 'preact/compat'; // This just makes VSCode's Intellisense happy
-import { useDrag } from 'react-dnd';
 import { omit, thru } from 'lodash';
+import { useRef } from 'preact/hooks';
+import { useDrag, useDrop } from 'react-dnd';
 import { $bookmark } from "../../datumPlans";
-import { OPEN_BOOKMARK } from "../../messageNames";
+import { MOVE_BOOKMARK, OPEN_BOOKMARK } from "../../messageNames";
 import { DRAG_TYPES } from './constants';
 import { messagePoster } from './messageSending';
 import { vscontext } from '../helpers';
@@ -19,28 +20,89 @@ const TargetText = ({ bookmark }) => (
     </div>
 );
 
+export const insertionFromClientCoords = ({x, y}, { controls, content }) => {
+    try {
+        if (controls.left <= x && x < controls.right) {
+            const midLineY = (controls.top + controls.bottom) / 2;
+            if (controls.top <= y && y < midLineY) {
+                return {siblingBefore: true};
+            }
+            if (midLineY <= y && y < controls.bottom) {
+                return {siblingAfter: true};
+            }
+        }
+        if (content.left <= x && x < content.right) {
+            const midLineY = (content.top + content.bottom) / 2;
+            if (content.top <= y && y < midLineY) {
+                return {siblingBefore: true};
+            }
+            if (midLineY <= y && y < content.bottom) {
+                return {child: true};
+            }
+        }
+    } catch (error) {
+        if (!(error instanceof Error)) {
+            error = new Error("Unexpected throw", { cause: error });
+        }
+        console.error(error);
+        return {invalid: error};
+    }
+    return {invalid: true};
+};
+
 const FOLDING_ICON_MAP = {
     'collapsed': 'chevron-right',
     'expanded': 'chevron-down',
     'default': 'blank',
 };
-const MarkInfo = ({ bookmark, ancestors = [], drag, folding }) => {
+const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
     // The `messagePoster`s have to be instantiated here because they `useContext`
     const showInEditor = messagePoster(OPEN_BOOKMARK);
+    const moveBookmark = messagePoster(MOVE_BOOKMARK);
     const openThis = () => {
         showInEditor({ bookmark });
     };
+    const controlsDom = useRef(), contentDom = useRef();
+    const itemPath = [...ancestors, bookmark.id];
+    const insertionFromMonitor = (monitor) => (
+        insertionFromClientCoords(
+            monitor.getClientOffset(),
+            {
+                controls: controlsDom.current.getBoundingClientRect(),
+                content: contentDom.current.getBoundingClientRect(),
+            }
+        )
+    );
+    const [, drop] = useDrop(() => ({
+        accept: [DRAG_TYPES.BOOKMARK],
+        canDrop: ({ id }, monitor) => (
+            !itemPath.includes(id)
+            && !insertionFromMonitor(monitor).invalid
+        ),
+        drop: ({ itemPath: subject }, monitor) => {
+            const insert = insertionFromMonitor(monitor);
+            const moveSpec = {
+                subject,
+            };
+            if (insert.siblingBefore) {
+                moveSpec.newParent = ancestors;
+                moveSpec.position = { before: bookmark.id };
+            } else if (insert.siblingAfter) {
+                moveSpec.newParent = ancestors;
+                moveSpec.position = { after: bookmark.id };
+            } else if (insert.child) {
+                moveSpec.newParent = itemPath;
+            }
+            console.log({ moveSpec });
+            if (moveSpec.newParent) {
+                moveBookmark(moveSpec);
+            }
+        },
+    }));
     const markContent = (
         $bookmark.file.get(bookmark)
         ? (
-            <div
-                {...vscontext({
-                    webviewArea: 'bookmark',
-                    itemPath: [...ancestors, bookmark.id],
-                    hasChildMarks: Boolean(bookmark.children?.length),
-                })}
-                onClick={openThis}
-            >
+            <div onClick={openThis}>
                 <LineRef bookmark={bookmark}/>
                 <TargetText bookmark={bookmark}/>
             </div>
@@ -48,7 +110,7 @@ const MarkInfo = ({ bookmark, ancestors = [], drag, folding }) => {
         : <h3>{$bookmark.markText.get(bookmark)}</h3>
     );
     const controls = [
-        <span ref={drag}>
+        <span ref={drag} className="drag-handle">
             <i className="codicon codicon-gripper"></i>
         </span>
     ];
@@ -60,16 +122,24 @@ const MarkInfo = ({ bookmark, ancestors = [], drag, folding }) => {
     }
 
     return (
-        <>
-            <div className="controls">{controls}</div>
-            <div className="content">
+        <div
+            className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`}
+            ref={drop}
+            {...vscontext({
+                webviewArea: 'bookmark',
+                itemPath: [...ancestors, bookmark.id],
+                hasChildMarks: Boolean(bookmark.children?.length),
+            })}
+        >
+            <div className="controls" ref={controlsDom}>{controls}</div>
+            <div className="content" ref={contentDom}>
                 {markContent}
             </div>
-        </>
+        </div>
     );
 };
 
-const Bookmark = ({ tree: treeNode, ancestors = [] }) => {
+const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) => {
     const nodeIdPath = [...ancestors, treeNode.id];
     const [{ isDragging }, drag, preview] = useDrag(() => ({
         type: DRAG_TYPES.BOOKMARK,
@@ -85,7 +155,12 @@ const Bookmark = ({ tree: treeNode, ancestors = [] }) => {
         : Array.from(
             $bookmark.children.getIterable(treeNode),
             subTree => (
-                <Bookmark tree={subTree} key={subTree.id} ancestors={nodeIdPath}/>
+                <Bookmark
+                    tree={subTree}
+                    key={subTree.id}
+                    ancestors={nodeIdPath}
+                    ancestorDragging={ancestorDragging || isDragging}
+                />
             )
         )
     );
@@ -99,9 +174,10 @@ const Bookmark = ({ tree: treeNode, ancestors = [] }) => {
         return 'expanded';
     });
     return (
-        <div ref={preview} className="bookmark">
+        <div ref={preview} className="bookmark-tree">
             <MarkInfo
                 bookmark={omit(treeNode, ['children'])}
+                dragging={ancestorDragging || isDragging}
                 {...{ ancestors, drag, folding }}
             />
             {...shownChildren}

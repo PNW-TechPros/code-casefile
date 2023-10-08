@@ -9,3 +9,7 @@ export function vscontext(value) {
 export const NO_STD_CMENU_ENTRIES = Object.freeze(
     {'preventDefaultContextMenuItems': true}
 );
+
+export function when(cond, output) {
+    return cond ? output : null;
+}
