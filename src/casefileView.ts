@@ -177,6 +177,24 @@ export class CasefileView implements vscode.WebviewViewProvider {
         });
 	}
 
+	async deleteAllBookmarks() {
+        const choice = await vscode.window.showWarningMessage(
+            "Delete all bookmarks from current casefile?",
+            {
+                modal: true,
+            },
+            "Yes"
+        );
+        switch (choice) {
+            case undefined:
+                return;
+        }
+        return this._modifyCasefileContent((casefile) => {
+            casefile.bookmarks = [];
+            return true;
+        });
+	}
+
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
         // BEGIN SAMPLE CODE from https://github.com/microsoft/vscode-extension-samples/blob/2f83557a56c37a5e48943ea0201e1729708690b6/webview-view-sample/src/extension.ts
 

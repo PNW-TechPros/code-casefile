@@ -60,6 +60,9 @@ export function activate(context: vscode.ExtensionContext) {
 			debug("deleteBookmark command executed: %o", itemPath);
 			casefileView.deleteBookmark(itemPath);
 		}),
+		vscode.commands.registerCommand('codeCasefile.deleteAllBookmarks', () => {
+			casefileView.deleteAllBookmarks();
+		}),
 	);
 }
 

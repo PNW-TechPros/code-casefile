@@ -29,6 +29,12 @@
         }
       }
     ],
+    "icons":{
+      "casefile-delete-all-bookmarks": {
+        "description": "Delete all bookmarks from the current casefile",
+        "default": "clear-all"
+      }
+    },
     "commands": [
       {
         "command": "codeCasefile.loadCannedCasefile",
@@ -39,6 +45,12 @@
         "command": "codeCasefile.deleteBookmark",
         "title": "Delete bookmark",
         "category": "Casefile"
+      },
+      {
+        "command": "codeCasefile.deleteAllBookmarks",
+        "title": "Delete all bookmarks from current casefile",
+        "category": "Casefile",
+        "icon": "$(casefile-delete-all-bookmarks)"
       }
     ],
     "menus": {
@@ -46,6 +58,12 @@
         {
           "command": "codeCasefile.deleteBookmark",
           "when": "false"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "codeCasefile.deleteAllBookmarks",
+          "when": "view == 'codeCasefile.casefileView'"
         }
       ],
       "webview/context": [
