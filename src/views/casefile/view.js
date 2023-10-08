@@ -30,15 +30,18 @@ const RequestInitialData = ({ children }) => {
 
 const Trash = () => {
     const deleteBookmark = messagePoster(DELETE_BOOKMARK);
-    const [, trashDrop] = useDrop(() => ({
+    const [{ cursorHovering }, trashDrop] = useDrop(() => ({
         accept: [DRAG_TYPES.BOOKMARK],
         drop: ({ itemPath }) => {
             deleteBookmark({ itemPath });
         },
+        collect: (monitor) => ({
+            cursorHovering: monitor.isOver({ shallow: true }),
+        }),
     }));
 
     return (
-        <div className="bookmark-trash" ref={trashDrop}>
+        <div className="bookmark-trash" ref={trashDrop} data-drop-status={cursorHovering ? 'current-target' : 'none'}>
             <div><i className="codicon codicon-trash"></i><span> Remove</span></div>
         </div>
     );

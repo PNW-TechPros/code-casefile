@@ -110,7 +110,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
         : <h3>{$bookmark.markText.get(bookmark)}</h3>
     );
     const controls = [
-        <span ref={drag}>
+        <span ref={drag} className="drag-handle">
             <i className="codicon codicon-gripper"></i>
         </span>
     ];

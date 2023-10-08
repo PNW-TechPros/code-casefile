@@ -23,6 +23,12 @@
     display: grid;
     grid-template-columns: [gutter-start] 1.5em [gutter-end content-start] auto [content-end];
     grid-template-areas: "controls content";
+    cursor: default;
+}
+
+.bookmark:hover {
+    background-color: var(--vscode-list-hoverBackground);
+    color: var(--vscode-list-hoverForeground);
 }
 
 .dragging-bookmark {
@@ -30,15 +36,17 @@
 }
 
 .bookmark > .controls {
-    /* grid-area: controls; */
     grid-column: controls-start / controls-end;
     align-self: center;
     display: flex;
     flex-direction: column;
 }
 
+.bookmark > .controls .drag-handle {
+    cursor: grab;
+}
+
 .bookmark > .content {
-    /* grid-area: node-content; */
     grid-column: content-start / content-end;
     margin-bottom: 0.4em;
 }
@@ -60,17 +68,23 @@
     height: 6px;
     pointer-events: none;
     border-radius: 3px;
-    background-color: white;
+    background-color: var(--vscode-list-highlightForeground);
     opacity: 0.5;
 }
 
 .casefile-ui .bookmark-trash {
     display: flex;
     align-items: self-start;
-    background-color: darkred;
+    background-color: var(--vscode-list-inactiveSelectionBackground);
+    color: var(--vscode-list-inactiveSelectionForeground);
     padding: 3px;
     position: relative;
     z-index: 40;
+}
+
+.casefile-ui .bookmark-trash[data-drop-status="current-target"] {
+    background-color: var(--vscode-diffEditor-removedTextBackground);
+    color: var(--vscode-diffEditor-removedTextForeground);
 }
 
 .casefile-ui .bookmark-trash div {
