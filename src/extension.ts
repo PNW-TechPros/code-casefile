@@ -1,15 +1,18 @@
 import * as vscode from 'vscode';
 import { CasefileView } from './casefileView';
 import GitCasefile from './services/gitCasefile';
-import Services from './services';
+import Services, { Persistence } from './services';
 import { Casefile } from './Casefile';
 import { debug } from './debugLog';
+import { CasefileSharingState } from './CasefileSharingState';
+import { SharedCasefilesViewManager } from './sharedCasefilesView';
 
-const PERSISTENT_STATE_PROPERTY = 'casefile';
+const CASEFILE_PERSISTENCE_PROPERTY = 'casefile';
+const SHARING_PERSISTENCE_PROPERTY = 'sharing';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 	const subscribe = context.subscriptions.push.bind(context.subscriptions);
 
 	const services = new Services({
@@ -20,9 +23,10 @@ export function activate(context: vscode.ExtensionContext) {
 			)
 			|| []
 		),
-		getCurrentForest: () => context.workspaceState.get<Casefile>(PERSISTENT_STATE_PROPERTY) ?? {},
-		setCurrentForest: (casefile) => context.workspaceState.update(PERSISTENT_STATE_PROPERTY, casefile),
+		forestPersistence: workspaceStatePersister(context, CASEFILE_PERSISTENCE_PROPERTY, () => ({})),
+		sharingStatePersistence: workspaceStatePersister(context, SHARING_PERSISTENCE_PROPERTY, () => ({})),
 	});
+	subscribe(services);
 
 	subscribe(vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('casefile.externalTools')) {
@@ -34,6 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	const casefileView = new CasefileView(context.extensionUri, services);
+	subscribe(casefileView);
 	subscribe(vscode.window.registerWebviewPanelSerializer(
 		CasefileView.viewType,
 		new CasefileView.PanelSerializer()
@@ -42,6 +47,10 @@ export function activate(context: vscode.ExtensionContext) {
 		CasefileView.viewType,
 		casefileView
 	));
+
+	const sharingManager = new SharedCasefilesViewManager(services);
+	subscribe(sharingManager);
+	await sharingManager.loadPeerList();
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
@@ -55,16 +64,37 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	}));
 
-	subscribe(
-		vscode.commands.registerCommand('codeCasefile.deleteBookmark', ({ itemPath }) => {
+	subscribe(...Object.entries({
+
+		deleteAllBookmarks: () => {
+			casefileView.deleteAllBookmarks();
+		},
+
+		deleteBookmark: ({ itemPath }: { itemPath: string[] }) => {
 			debug("deleteBookmark command executed: %o", itemPath);
 			casefileView.deleteBookmark(itemPath);
-		}),
-		vscode.commands.registerCommand('codeCasefile.deleteAllBookmarks', () => {
-			casefileView.deleteAllBookmarks();
-		}),
-	);
+		},
+
+		fetchCasefilesFromPeer: async () => {
+			debug("Fetching casefile from peer");
+			await sharingManager.fetchFromCurrentPeer();
+		},
+
+		selectSharingPeer: async () => {
+			debug("Asking user to select sharing peer");
+			await sharingManager.promptUserForPeer();
+		},
+
+	}).map(([name, handler]) => vscode.commands.registerCommand('codeCasefile.' + name, handler)));
 }
 
 // This method is called when your extension is deactivated
 export function deactivate() {}
+
+function workspaceStatePersister<T>(context: vscode.ExtensionContext, key: string, makeDefault: () => T): Persistence<T> {
+	return [
+		() => context.workspaceState.get<T>(key) ?? makeDefault(),
+		(state) => context.workspaceState.update(key, state)
+	];
+}
+

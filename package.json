@@ -33,6 +33,14 @@
       "casefile-delete-all-bookmarks": {
         "description": "Delete all bookmarks from the current casefile",
         "default": "clear-all"
+      },
+      "casefile-fetch-shared":{
+        "description": "Fetch casefiles from the selected peer",
+        "default": "refresh"
+      },
+      "casefile-select-sharing-peer":{
+        "description": "Select a peer for sharing casefiles",
+        "default": "remote"
       }
     },
     "commands": [
@@ -51,6 +59,18 @@
         "title": "Delete all bookmarks from current casefile",
         "category": "Casefile",
         "icon": "$(casefile-delete-all-bookmarks)"
+      },
+      {
+        "command": "codeCasefile.fetchCasefilesFromPeer",
+        "title": "Fetch casefiles from the selected peer",
+        "category": "Casefile",
+        "icon": "$(casefile-fetch-shared)"
+      },
+      {
+        "command": "codeCasefile.selectSharingPeer",
+        "title": "Select peer for sharing",
+        "category": "Casefile",
+        "icon": "$(casefile-select-sharing-peer)"
       }
     ],
     "menus": {
@@ -64,6 +84,16 @@
         {
           "command": "codeCasefile.deleteAllBookmarks",
           "when": "view == 'codeCasefile.casefileView'"
+        },
+        {
+          "command": "codeCasefile.selectSharingPeer",
+          "when": "view == 'codeCasefile.sharedCasefilesView'",
+          "group": "1_modification"
+        },
+        {
+          "command": "codeCasefile.fetchCasefilesFromPeer",
+          "when": "view == 'codeCasefile.sharedCasefilesView' && codeCasefile.peerEstablished",
+          "group": "navigation"
         }
       ],
       "webview/context": [
@@ -79,6 +109,11 @@
           "type": "webview",
           "id": "codeCasefile.casefileView",
           "name": "Current Casefile"
+        },
+        {
+          "id": "codeCasefile.sharedCasefilesView",
+          "name": "Shared Casefiles",
+          "visibility": "collapsed"
         }
       ]
     }
