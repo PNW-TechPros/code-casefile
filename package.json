@@ -84,6 +84,11 @@
         {
           "command": "codeCasefile.deleteAllBookmarks",
           "when": "view == 'codeCasefile.casefileView'"
+        },
+        {
+          "command": "codeCasefile.selectSharingPeer",
+          "when": "view == 'codeCasefile.sharedCasefilesView'",
+          "group": "1_modification"
         }
       ],
       "webview/context": [
