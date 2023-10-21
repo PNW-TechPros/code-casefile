@@ -110,12 +110,30 @@ export class CasefileView implements vscode.WebviewViewProvider {
         }
     };
     private _casefile: any;
+    private _disposables: vscode.Disposable[] = [];
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
         private readonly _services: Services,
     ) {
+        this._disposables.push(this._services.onForestChange((casefile) => {
+            if (casefile !== this._casefile) {
+                this._casefile = casefile;
+                if (this._view) {
+                    this._view.webview.postMessage({ type: 'setViewState', value: casefile });
+                }
+            }
+        }));
+    }
 
+    dispose() {
+        this._disposables.forEach((item) => {
+            try {
+                item.dispose();
+            } catch (error) {
+                console.error(error);
+            }
+        });
     }
 
     async resolveWebviewView(
@@ -263,14 +281,14 @@ export class CasefileView implements vscode.WebviewViewProvider {
         ]);
     }
 
-    private _setCasefileContent(stateValue: Casefile, { onFail }: { onFail?: (msg: string) => void } = {}) {
+    private async _setCasefileContent(stateValue: Casefile, { onFail }: { onFail?: (msg: string) => void } = {}) {
         this._casefile = stateValue;
         if (!this._view) {
             onFail?.("CasefileView not yet resolved");
             return;
         }
 
-        this._services.setCurrentForest(stateValue);
+        await this._services.setCurrentForest(stateValue);
         this._view.webview.postMessage({ type: 'setViewState', value: stateValue });
     }
 
@@ -279,9 +297,9 @@ export class CasefileView implements vscode.WebviewViewProvider {
         return Promise.resolve()
         .then(() => fn(casefile))
         .then(
-            (indicator) => {
+            async (indicator) => {
                 if (indicator !== false) {
-                    this._setCasefileContent(casefile);
+                    await this._setCasefileContent(casefile);
                 }
                 return true;
             },

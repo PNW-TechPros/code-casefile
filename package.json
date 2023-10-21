@@ -33,6 +33,10 @@
       "casefile-delete-all-bookmarks": {
         "description": "Delete all bookmarks from the current casefile",
         "default": "clear-all"
+      },
+      "casefile-fetch-shared":{
+        "description": "Fetch casefiles from the selected peer",
+        "default": "repo-pull"
       }
     },
     "commands": [
@@ -51,6 +55,12 @@
         "title": "Delete all bookmarks from current casefile",
         "category": "Casefile",
         "icon": "$(casefile-delete-all-bookmarks)"
+      },
+      {
+        "command": "codeCasefile.fetchCasefilesFromPeer",
+        "title": "Fetch casefiles from the selected peer",
+        "category": "Casefile",
+        "icon": "${casefile-fetch-shared}"
       }
     ],
     "menus": {
@@ -79,6 +89,11 @@
           "type": "webview",
           "id": "codeCasefile.casefileView",
           "name": "Current Casefile"
+        },
+        {
+          "id": "codeCasefile.sharedCasefilesView",
+          "name": "Shared Casefiles",
+          "visibility": "collapsed"
         }
       ]
     }
