@@ -2,7 +2,9 @@ import { CasefileKeeper } from "git-casefile";
 import { WorkspaceConfiguration } from "vscode";
 import { Integration as EditorIntegration } from "./editorIntegration";
 import { tap } from "lodash";
+import * as path from "path";
 import { debug } from "../debugLog";
+import { statSync } from "fs";
 
 const { CasefileKeeper: CasefileKeeperImpl } = require('git-casefile');
 
@@ -13,12 +15,12 @@ type GitCasefileConfig = {
 
 export default class GitCasefile {
     private readonly _getConfig: () => WorkspaceConfiguration;
-    private readonly _getCwd: () => string[];
+    private readonly _getWorkDirs: () => string[];
     private _keeperInsts: (null | CasefileKeeper[]);
     
     constructor({ getConfig, getWorkdirs }: GitCasefileConfig) {
         this._getConfig = getConfig;
-        this._getCwd = getWorkdirs;
+        this._getWorkDirs = getWorkdirs;
         this._keeperInsts = null;
     }
 
@@ -38,17 +40,22 @@ export default class GitCasefile {
         if (toolsPath) {
             toolOptions.env.PATH = toolsPath;
         }
-        return tap(this._keeperInsts = this._getCwd().map(
-            cwd => Object.assign(
-                new CasefileKeeperImpl({
-                    toolOptions: {...toolOptions, cwd },
-                    editor: new EditorIntegration({ cwd }),
-                }), {
-                    workingDir: cwd
+        return tap(this._keeperInsts = [], (keepers: CasefileKeeper[]) => {
+            for (const workDir of this._getWorkDirs()) {
+                const gitDir = path.join(workDir, '.git');
+                if (!statSync(gitDir, { throwIfNoEntry: false })) {
+                    continue;
                 }
-            )
-        ), (keepers) => {
-            // debug("CasefileKeeper editors: %O", keepers.map(k => k.bookmarks.editor.constructor.name));
+                const gitKeeper = Object.assign(
+                    new CasefileKeeperImpl({
+                        toolOptions: {...toolOptions, cwd: workDir},
+                        editor: new EditorIntegration({ cwd: workDir }),
+                    }), {
+                        workingDir: workDir,
+                    }
+                );
+                keepers.push(gitKeeper);
+            }
         });
     }
     
