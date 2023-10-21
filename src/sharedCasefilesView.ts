@@ -6,7 +6,7 @@ import { cloneDeep, tap, thru } from 'lodash';
 import { basename, dirname } from 'path';
 import { CasefileSharingState } from './CasefileSharingState';
 import { CasefileGroup, CasefileKeeper } from 'git-casefile';
-import { deiconed } from './vscodeUtils';
+import { deiconed, setContext } from './vscodeUtils';
 
 const PICK_PAYLOAD = Symbol('payload');
 
@@ -214,6 +214,7 @@ export class SharedCasefilesViewManager {
                 }
             }
         );
+        setContext('peerEstablished', Boolean(peer));
     }
 
     getEffectivePeer(): CasefileStore | null {
@@ -309,7 +310,7 @@ export class SharedCasefilesViewManager {
             );
             return;
         }
-        debug("Fetching from %O", peer);
+        debug("Fetching from %o", peer);
 
         await this._modifySharingState((state) => {
             if (!state.peer) {
