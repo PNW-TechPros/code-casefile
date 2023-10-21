@@ -80,6 +80,11 @@ export async function activate(context: vscode.ExtensionContext) {
 			await sharingManager.fetchFromCurrentPeer();
 		},
 
+		selectSharingPeer: async () => {
+			debug("Asking user to select sharing peer");
+			await sharingManager.promptUserForPeer();
+		},
+
 	}).map(([name, handler]) => vscode.commands.registerCommand('codeCasefile.' + name, handler)));
 }
 

@@ -37,6 +37,10 @@
       "casefile-fetch-shared":{
         "description": "Fetch casefiles from the selected peer",
         "default": "repo-pull"
+      },
+      "casefile-select-sharing-peer":{
+        "description": "Select a peer for sharing casefiles",
+        "default": "remote"
       }
     },
     "commands": [
@@ -61,6 +65,12 @@
         "title": "Fetch casefiles from the selected peer",
         "category": "Casefile",
         "icon": "${casefile-fetch-shared}"
+      },
+      {
+        "command": "codeCasefile.selectSharingPeer",
+        "title": "Select peer for sharing",
+        "category": "Casefile",
+        "icon": "${casefile-select-sharing-peer"
       }
     ],
     "menus": {

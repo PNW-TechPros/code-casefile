@@ -6,6 +6,9 @@ import { cloneDeep, tap, thru } from 'lodash';
 import { basename, dirname } from 'path';
 import { CasefileSharingState } from './CasefileSharingState';
 import { CasefileGroup, CasefileKeeper } from 'git-casefile';
+import { deiconed } from './vscodeUtils';
+
+const PICK_PAYLOAD = Symbol('payload');
 
 interface TreeItemSource {
     renderTreeItem(): TreeItem;
@@ -138,6 +141,7 @@ class CasefileLibrary implements TreeDataProvider<TreeItemSource> {
         if (!knownCasefiles) {
             return [new LibraryLoader()];
         }
+        debug("Rendering shared casefiles");
         return knownCasefiles.map(
             (casefileGroup) => new CasefileNameGroup(this._manager, casefileGroup)
         );
@@ -245,20 +249,25 @@ export class SharedCasefilesViewManager {
         return this._peerList;
     }
 
-    async loadPeerList() {
-        this._peerList = await Promise.all(this._services.casefile.keepers.map(
-            (keeper) => {
-                if (!keeper.workingDir) {
-                    return [];
+    async loadPeerList(): Promise<CasefileStore[]> {
+        return tap(
+            await Promise.all(this._services.casefile.keepers.map(
+                (keeper) => {
+                    if (!keeper.workingDir) {
+                        return [];
+                    }
+                    const folder = keeper.workingDir;
+                    return keeper.gitOps.getListOfRemotes().then(
+                        (remotes) => remotes.map(
+                            (remote) => ({ folder, remote })
+                        )
+                    );
                 }
-                const folder = keeper.workingDir;
-                return keeper.gitOps.getListOfRemotes().then(
-                    (remotes) => remotes.map(
-                        (remote) => ({ folder, remote })
-                    )
-                );
+            )).then((items) => items.flat()),
+            (newList) => {
+                this._peerList = newList;
             }
-        )).then((items) => items.flat());
+        );
     }
 
     get peer(): CasefileStore | undefined {
@@ -278,7 +287,11 @@ export class SharedCasefilesViewManager {
                     await this._services.setSharingState(state);
                     this._sharingState = state;
                 }
-                return true;
+                return Promise.resolve()
+                .then(() => {
+                   this._stateChange.fire();
+                   return true;
+                });
             },
 
             (error) => {
@@ -325,9 +338,48 @@ export class SharedCasefilesViewManager {
             state.knownCasefiles = await keeper.gitOps.getListOfCasefiles();
             return true;
         });
+    }
 
-        // Signal that the tree data has changed
-        this._stateChange.fire();
+    async promptUserForPeer() {
+        const peerList = await this.loadPeerList();
+        type StringGroups = { [key: string]: Set<string> };
+        const basenameFolders: StringGroups = tap(Object.create(null), (groups: StringGroups) => {
+            for (const { folder } of peerList) {
+                const folderBase = basename(folder);
+                if (!groups[folderBase]) {
+                    groups[folderBase] = new Set();
+                }
+                groups[folderBase].add(folder);
+            }
+        });
+        const options = peerList.map((peer) => {
+            const folderBase = basename(peer.folder);
+            const folderDesc = folderBase + thru(
+                basenameFolders[folderBase].size,
+                (basenameCount) => basenameCount > 1 ? ` ${dirname(peer.folder)}` : ''
+            );
+            return {
+                iconPath: new vscode.ThemeIcon('remote'),
+                label: deiconed(peer.remote),
+                description: `$(folder) ${deiconed(folderDesc)}`,
+                [PICK_PAYLOAD]: peer,
+            };
+        });
+        const userSelection = await vscode.window.showQuickPick(options, {
+            title: "Casefile: Select Sharing Peer",
+            matchOnDescription: true,
+        }).then((item) => item && item[PICK_PAYLOAD]);
+        if (userSelection) {
+            debug("User selected sharing peer %o", userSelection);
+            await this._modifySharingState((state) => {
+                state.peer = userSelection;
+                return true;
+            });
+            this._setViewInfo();
+            await this.fetchFromCurrentPeer();
+        } else {
+            debug("User canceled sharing peer selection");
+        }
     }
 
     async includeAuthors(instance: CasefileInstanceMetadata): Promise<void> {
