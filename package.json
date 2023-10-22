@@ -49,11 +49,6 @@
     },
     "commands": [
       {
-        "command": "codeCasefile.loadCannedCasefile",
-        "title": "Load canned casefile data",
-        "category": "Casefile"
-      },
-      {
         "command": "codeCasefile.deleteBookmark",
         "title": "Delete bookmark",
         "category": "Casefile"

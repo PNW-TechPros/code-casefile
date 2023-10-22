@@ -57,15 +57,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	
-	// This is a temporary command until we have "casefile sharing" implemented
-	subscribe(vscode.commands.registerCommand('codeCasefile.loadCannedCasefile', () => {
-		casefileView.loadCannedCasefileData({
-			onFail: (msg) => {
-				vscode.window.showErrorMessage(msg);
-			}
-		});
-	}));
-
 	subscribe(...Object.entries({
 
 		deleteAllBookmarks: () => {
