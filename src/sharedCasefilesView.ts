@@ -338,14 +338,16 @@ export class SharedCasefilesViewManager {
         }
         debug("Fetching from %o", peer);
 
-        await this._modifySharingState((state) => {
+        if (await this._modifySharingState((state) => {
             if (!state.peer) {
                 // Save the effective peer as our peer
                 state.peer = peer;
                 return true;
             }
             return false;
-        });
+        })) {
+            this._setViewInfo();
+        };
 
         const keeper = await this._getCurrentKeeper({
             folder: peer.folder,
