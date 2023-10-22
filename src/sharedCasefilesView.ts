@@ -88,7 +88,7 @@ class CasefileNameGroup implements TreeItemSource, CasefileInstanceIdentifier {
     ) {
         this._treeItem = new TreeItem(this.group.name);
         this._treeItem.id = `CasefileGroup ${this.group.name}`;
-        this._treeItem.iconPath = new vscode.ThemeIcon('bookmark');
+        this._treeItem.iconPath = new vscode.ThemeIcon('notebook');
         [this._treeItem.collapsibleState, this._treeItem.contextValue] = (
             this.group.instances.length > 1
             ? [FoldState.Expanded, undefined]
@@ -118,7 +118,9 @@ class CasefileInstance implements TreeItemSource, CasefileInstanceIdentifier {
     private _instancePath: any;
     constructor(instance: { path: string, authors: string[] }) {
         this._instancePath = instance.path;
-        this._treeItem = new TreeItem("");
+        this._treeItem = new TreeItem(
+            `By ${multiterm(instance.authors, 'and')}`
+        );
         this._treeItem.id = `CasefileInstance ${instance.path}`;
         this._treeItem.contextValue = IMPORTABLE_CASEFILE;
         treeItemSharedCasefiles.set(this._treeItem, instance.path);
@@ -493,3 +495,17 @@ function workspaceFolderBasenameCount(folderName: string): number {
         0
     );
 }
+
+function multiterm(authors: string[], conjuntion: string): string {
+    switch (authors.length) {
+        case 0:
+            return 'authors unknown';
+        case 1:
+            return authors[0];
+        case 2:
+            return authors.join(conjuntion);
+        default:
+            return `${authors.slice(0, -1).join(', ')}, ${conjuntion} ${authors.slice(-1)[0]}`;
+    }
+}
+
