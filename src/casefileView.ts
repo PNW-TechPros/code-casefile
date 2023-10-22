@@ -8,6 +8,7 @@ import { cloneDeep, thru } from 'lodash';
 import path = require('path');
 import type { Bookmark } from './Bookmark';
 import type { Casefile } from './Casefile';
+import nextId from './idGen';
 
 const sampleCasefile = {
     "bookmarks": [
@@ -102,7 +103,7 @@ const PROMOTE_CHILDREN = "Promote child marks";
 
 export class CasefileView implements vscode.WebviewViewProvider {
     public static readonly viewType = 'codeCasefile.casefileView';
-    
+
     private _view?: vscode.WebviewView;
     static PanelSerializer = class implements vscode.WebviewPanelSerializer {
         async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: unknown): Promise<void> {
@@ -230,7 +231,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
                 vscode.Uri.joinPath(this._extensionUri, ...path, filename)
             );
         };
-    
+
 		// Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
         const scriptUri = viewUri('main.js');
 
@@ -419,6 +420,26 @@ export class CasefileView implements vscode.WebviewViewProvider {
             return true;
         });
     }
+
+    addImportedBookmarks(importPath: string, importedBookmarks: Bookmark[]) {
+        if (!importedBookmarks.length) {
+            return;
+        }
+        this._modifyCasefileContent((casefile) => {
+            if (casefile.bookmarks?.length) {
+                // Import under a header
+                casefile.bookmarks.push({
+                    id: nextId(),
+                    markText: casefileGroupName(importPath),
+                    children: importedBookmarks,
+                });
+            } else {
+                casefile.bookmarks = importedBookmarks;
+                casefile.path = importPath;
+            }
+            return true;
+        });
+    }
 }
 
 function buildString(
@@ -449,4 +470,8 @@ function getMarkPath(state: Bookmark[], ids: string[]) : MarkPathStep[] {
         level = level[i].children || [];
     }
     return result;
+}
+
+function casefileGroupName(sharedCasefilePath: string): string {
+    return sharedCasefilePath.replace(/\/[^/]+$/, '');
 }

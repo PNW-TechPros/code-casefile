@@ -7,12 +7,19 @@ import { basename, dirname } from 'path';
 import { CasefileSharingState } from './CasefileSharingState';
 import { CasefileGroup, CasefileKeeper } from 'git-casefile';
 import { deiconed, setContext } from './vscodeUtils';
+import { Bookmark } from './Bookmark';
 
 const PICK_PAYLOAD = Symbol('payload');
+const treeItemSharedCasefiles = new WeakMap<TreeItem, string>();
+const IMPORTABLE_CASEFILE = 'importableCasefileInstance';
 
 interface TreeItemSource {
     renderTreeItem(): TreeItem;
     getChildren(): ProviderResult<TreeItemSource[]>;
+}
+
+export interface CasefileInstanceIdentifier {
+    sharedCasefilePath?: string;
 }
 
 type CasefileStore = {
@@ -72,7 +79,7 @@ class LibraryLoader implements TreeItemSource {
     }
 }
 
-class CasefileNameGroup implements TreeItemSource {
+class CasefileNameGroup implements TreeItemSource, CasefileInstanceIdentifier {
     private _treeItem: vscode.TreeItem;
     private _instances: CasefileInstance[] = [];
     constructor(
@@ -82,9 +89,12 @@ class CasefileNameGroup implements TreeItemSource {
         this._treeItem = new TreeItem(this.group.name);
         this._treeItem.id = `CasefileGroup ${this.group.name}`;
         this._treeItem.iconPath = new vscode.ThemeIcon('bookmark');
-        if (this.group.instances.length > 1) {
-            this._treeItem.collapsibleState = FoldState.Expanded;
-        }
+        [this._treeItem.collapsibleState, this._treeItem.contextValue] = (
+            this.group.instances.length > 1
+            ? [FoldState.Expanded, undefined]
+            : [FoldState.None, IMPORTABLE_CASEFILE]
+        );
+        treeItemSharedCasefiles.set(this._treeItem, this.group.instances[0].path);
     }
     renderTreeItem(): TreeItem {
         return this._treeItem;
@@ -95,18 +105,32 @@ class CasefileNameGroup implements TreeItemSource {
         }));
         return this._instances;
     }
+    get sharedCasefilePath(): string | undefined {
+        if (this.group.instances.length !== 1) {
+            return undefined;
+        }
+        return this.group.instances[0].path;
+    }
 }
 
-class CasefileInstance implements TreeItemSource {
+class CasefileInstance implements TreeItemSource, CasefileInstanceIdentifier {
     private _treeItem: vscode.TreeItem;
+    private _instancePath: any;
     constructor(instance: { path: string, authors: string[] }) {
+        this._instancePath = instance.path;
         this._treeItem = new TreeItem("");
+        this._treeItem.id = `CasefileInstance ${instance.path}`;
+        this._treeItem.contextValue = IMPORTABLE_CASEFILE;
+        treeItemSharedCasefiles.set(this._treeItem, instance.path);
     }
     renderTreeItem(): vscode.TreeItem {
         throw new Error('Method not implemented.');
     }
     getChildren(): vscode.ProviderResult<TreeItemSource[]> {
         throw new Error('Method not implemented.');
+    }
+    get sharedCasefilePath(): string | undefined {
+        return this._instancePath;
     }
 }
 
@@ -381,6 +405,27 @@ export class SharedCasefilesViewManager {
         } else {
             debug("User canceled sharing peer selection");
         }
+    }
+
+    getAssociatedPath(treeItem: TreeItem) {
+        return treeItemSharedCasefiles.get(treeItem);
+    }
+
+    async promptUserForCasefilePath(): Promise<string | undefined> {
+        throw new Error("Method not implemented");
+    }
+
+    async getBookmarks(casefileInstancePath: string): Promise<Bookmark[]> {
+        const peer = this.peer;
+        if (!peer) {
+            throw new Error("code-casefile: No peer selected");
+        }
+        const keeper = this._getCurrentKeeper(peer);
+        if (!keeper) {
+            throw new Error("code-casefile: No casefile keeper for peer");
+        }
+        return keeper.gitOps.getCasefile(casefileInstancePath)
+        .then((casefile) => casefile.bookmarks || []);
     }
 
     async includeAuthors(instance: CasefileInstanceMetadata): Promise<void> {

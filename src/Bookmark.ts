@@ -1,3 +1,5 @@
+import nextId from "./idGen";
+
 export type Bookmark = {
     children?: Bookmark[];
     file?: string;
@@ -11,3 +13,17 @@ export type Bookmark = {
     id?: string;
     collapsed?: boolean;
 };
+
+export function fillMissingIds(bookmarks: Bookmark[]) {
+	const remaining = [...bookmarks];
+	while (remaining.length) {
+		const current = remaining.pop();
+		if (!current) {
+			break;
+		}
+		if (!current.id) {
+			current.id = nextId();
+		}
+		remaining.push(...(current.children || []));
+	}
+}

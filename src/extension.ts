@@ -5,7 +5,9 @@ import Services, { Persistence } from './services';
 import { Casefile } from './Casefile';
 import { debug } from './debugLog';
 import { CasefileSharingState } from './CasefileSharingState';
-import { SharedCasefilesViewManager } from './sharedCasefilesView';
+import { CasefileInstanceIdentifier, SharedCasefilesViewManager } from './sharedCasefilesView';
+import { Bookmark, fillMissingIds } from './Bookmark';
+import nextId from './idGen';
 
 const CASEFILE_PERSISTENCE_PROPERTY = 'casefile';
 const SHARING_PERSISTENCE_PROPERTY = 'sharing';
@@ -80,6 +82,23 @@ export async function activate(context: vscode.ExtensionContext) {
 			await sharingManager.fetchFromCurrentPeer();
 		},
 
+		importSharedCasefile: async (item: CasefileInstanceIdentifier | void) => {
+			debug("Importing share from %o", item?.sharedCasefilePath);
+			const importPath = (
+				item?.sharedCasefilePath
+				|| await sharingManager.promptUserForCasefilePath()
+			);
+			if (importPath) {
+				const importedBookmarks = await sharingManager.getBookmarks(importPath);
+				// Missing IDs would be a big problem, so fill any that are missing
+				fillMissingIds(importedBookmarks);
+				casefileView.addImportedBookmarks(
+					importPath,
+					importedBookmarks
+				);
+			}
+		},
+
 		selectSharingPeer: async () => {
 			debug("Asking user to select sharing peer");
 			await sharingManager.promptUserForPeer();
@@ -97,4 +116,3 @@ function workspaceStatePersister<T>(context: vscode.ExtensionContext, key: strin
 		(state) => context.workspaceState.update(key, state)
 	];
 }
-
