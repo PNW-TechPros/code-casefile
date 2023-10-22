@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { debug } from "./debugLog";
 
 export function deiconed(s: string): string {
     return s.replace(/\$\(.*?\)/, '\\$&');
@@ -18,5 +19,6 @@ export function setContext(
     if (prefix !== false) {
         key = `${prefix}.${key}`;
     }
+    debug("Setting context key %o to %o", key, value);
     return vscode.commands.executeCommand('setContext', key, value);
 }

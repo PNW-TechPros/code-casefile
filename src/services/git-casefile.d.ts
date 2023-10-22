@@ -23,6 +23,7 @@ declare module 'git-casefile' {
 
     class GitInteraction {
         fetchSharedCasefilesFromRemote(remote: string): Promise<void>;
+        getCasefile(path: string, options?: { before?: string }): Promise<{ bookmarks?: Bookmark[] }>;
         getCasefileAuthors(path: string): Promise<{path: string, authors: string[]}>;
         getListOfCasefiles(): Promise<CasefileGroup[]>;
         getListOfRemotes(): Promise<string[]>;

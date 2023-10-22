@@ -41,14 +41,13 @@
       "casefile-select-sharing-peer":{
         "description": "Select a peer for sharing casefiles",
         "default": "remote"
+      },
+      "casefile-import-shared":{
+        "description": "Import of shared casefile into current casefile",
+        "default": "repo-pull"
       }
     },
     "commands": [
-      {
-        "command": "codeCasefile.loadCannedCasefile",
-        "title": "Load canned casefile data",
-        "category": "Casefile"
-      },
       {
         "command": "codeCasefile.deleteBookmark",
         "title": "Delete bookmark",
@@ -71,6 +70,12 @@
         "title": "Select peer for sharing",
         "category": "Casefile",
         "icon": "$(casefile-select-sharing-peer)"
+      },
+      {
+        "command": "codeCasefile.importSharedCasefile",
+        "title": "Import this casefile into current",
+        "category": "Casefile",
+        "icon": "$(casefile-import-shared)"
       }
     ],
     "menus": {
@@ -78,6 +83,13 @@
         {
           "command": "codeCasefile.deleteBookmark",
           "when": "false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "codeCasefile.importSharedCasefile",
+          "group": "inline",
+          "when": "viewItem == 'importableCasefileInstance'"
         }
       ],
       "view/title": [
@@ -118,6 +130,9 @@
       ]
     }
   },
+  "enabledApiProposals": [
+    "treeViewActiveItem"
+  ],
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild-base": "npm-run-all -p esbuild:*",

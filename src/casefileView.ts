@@ -8,88 +8,7 @@ import { cloneDeep, thru } from 'lodash';
 import path = require('path');
 import type { Bookmark } from './Bookmark';
 import type { Casefile } from './Casefile';
-
-const sampleCasefile = {
-    "bookmarks": [
-        {
-            "children": [
-                {
-                    "children": [
-                        {
-                            "children": [],
-                            "file": "lib/casefile-sharing.js",
-                            "line": 503,
-                            "markText": "JSON.stringify({bookmarks})",
-                            "notes": "`bookmarks` is an `Array` of bookmark `Objects`.  \nSee `openBookmark`",
-                            "peg": {
-                                "line": "503",
-                                "commit": "2995ead2690f164b4381856d93fa3cb4711eae06"
-                            },
-                            "id": "1582324788217.1"
-                        }
-                    ],
-                    "file": "lib/casefile-sharing.js",
-                    "line": 496,
-                    "markText": "function promiseToGetHashOfCasefile",
-                    "notes": "",
-                    "peg": {
-                        "line": "357",
-                        "commit": "266b02658bf11d5f332e6c98e521b558a228806c"
-                    },
-                    "id": "1582324788217.0"
-                }
-            ],
-            "file": "lib/casefile-sharing.js",
-            "line": 363,
-            "markText": "function promiseToShareCasefile",
-            "notes": "",
-            "peg": {
-                "line": "265",
-                "commit": "e4728a54bd0372d9ccfba3e0fbc4fabf7366065d"
-            },
-            "id": "1582324633673.1"
-        },
-        {
-            "children": [
-                {
-                    "children": [
-                        {
-                            "children": [],
-                            "file": "lib/bookmarks.js",
-                            "line": 66,
-                            "markText": "function computeGitPeggingInfo",
-                            "notes": "Requesting and parsing \"hunks\" from `git diff`",
-                            "peg": {
-                                "line": "43",
-                                "commit": "99cc0ec48ac85a8adf05bfd27329df184de36497"
-                            },
-                            "id": "1582324788217.4"
-                        }
-                    ],
-                    "file": "lib/bookmarks.js",
-                    "line": 300,
-                    "markText": "function computeCurrentLineRange",
-                    "notes": "Given a file path, commit, and line number, figure out  \nthe corresponding range of line numbers (which may  \nonly include one line) in the current revision, and which  \namong them is the _most_ likely to represent the  \nindicated line.",
-                    "peg": {
-                        "line": "144",
-                        "commit": "99cc0ec48ac85a8adf05bfd27329df184de36497"
-                    },
-                    "id": "1582324788217.3"
-                }
-            ],
-            "file": "lib/bookmarks.js",
-            "line": 7,
-            "markText": "function openBookmark",
-            "notes": "",
-            "peg": {
-                "line": "5",
-                "commit": "908cb84f8a33d7739540c2bf17d55bdb393173a6"
-            },
-            "id": "1582324788217.2"
-        }
-    ],
-    "path": "casefile-basics/bdc74313-639c-490f-aab2-dc05e0bccf97"
-};
+import nextId from './idGen';
 
 type MarkPathStep = {
     index: number,
@@ -102,7 +21,7 @@ const PROMOTE_CHILDREN = "Promote child marks";
 
 export class CasefileView implements vscode.WebviewViewProvider {
     public static readonly viewType = 'codeCasefile.casefileView';
-    
+
     private _view?: vscode.WebviewView;
     static PanelSerializer = class implements vscode.WebviewPanelSerializer {
         async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: unknown): Promise<void> {
@@ -155,10 +74,6 @@ export class CasefileView implements vscode.WebviewViewProvider {
             debug(`Received message: %O`, data);
             dispatchMessage(this, data);
         });
-    }
-
-    async loadCannedCasefileData({ onFail }: { onFail?: (msg: string) => void } = {}): Promise<void> {
-        await this._setCasefileContent(cloneDeep(sampleCasefile), { onFail });
     }
 
 	deleteBookmark(itemPath: string[]): Promise<boolean> {
@@ -230,7 +145,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
                 vscode.Uri.joinPath(this._extensionUri, ...path, filename)
             );
         };
-    
+
 		// Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
         const scriptUri = viewUri('main.js');
 
@@ -419,6 +334,26 @@ export class CasefileView implements vscode.WebviewViewProvider {
             return true;
         });
     }
+
+    addImportedBookmarks(importPath: string, importedBookmarks: Bookmark[]) {
+        if (!importedBookmarks.length) {
+            return;
+        }
+        this._modifyCasefileContent((casefile) => {
+            if (casefile.bookmarks?.length) {
+                // Import under a header
+                casefile.bookmarks.push({
+                    id: nextId(),
+                    markText: casefileGroupName(importPath),
+                    children: importedBookmarks,
+                });
+            } else {
+                casefile.bookmarks = importedBookmarks;
+                casefile.path = importPath;
+            }
+            return true;
+        });
+    }
 }
 
 function buildString(
@@ -449,4 +384,8 @@ function getMarkPath(state: Bookmark[], ids: string[]) : MarkPathStep[] {
         level = level[i].children || [];
     }
     return result;
+}
+
+function casefileGroupName(sharedCasefilePath: string): string {
+    return sharedCasefilePath.replace(/\/[^/]+$/, '');
 }
