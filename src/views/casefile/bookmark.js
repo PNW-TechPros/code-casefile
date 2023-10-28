@@ -40,6 +40,22 @@ export const insertionFromClientCoords = ({x, y}, { controls, content }) => {
                 return {child: true};
             }
         }
+        if (
+            Math.min(controls.left, content.left) <= x
+            && x < Math.max(controls.right, content.right)
+        ) {
+            const midLineY = (
+                Math.min(controls.top, content.top)
+                + Math.max(controls.bottom, content.bottom)
+            ) / 2;
+            const xInContent = content.left <= x && x < content.right;
+            if (y < midLineY) {
+                return {siblingBefore: true};
+            } else if (xInContent) {
+                return {child: true};
+            }
+            return {siblingAfter: true};
+        }
     } catch (error) {
         if (!(error instanceof Error)) {
             error = new Error("Unexpected throw", { cause: error });
