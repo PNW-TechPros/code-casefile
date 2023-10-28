@@ -51,6 +51,15 @@
     margin-bottom: 0.4em;
 }
 
+.bookmark > .content > .indicators {
+    float: right;
+    font-size: xx-small;
+}
+
+.bookmark-note {
+    cursor: context-menu;
+}
+
 .casefile-ui {
     position: relative;
 }

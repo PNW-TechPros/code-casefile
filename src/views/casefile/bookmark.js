@@ -115,6 +115,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
             }
         },
     }));
+
     const markContent = (
         $bookmark.file.get(bookmark)
         ? (
@@ -125,6 +126,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
         )
         : <h3>{$bookmark.markText.get(bookmark)}</h3>
     );
+
     const controls = [
         <span ref={drag} className="drag-handle">
             <i className="codicon codicon-gripper"></i>
@@ -136,6 +138,12 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
     } else {
         controls.push(<i className={`codicon codicon-${FOLDING_ICON_MAP.default}`}></i>);
     }
+
+    const indicators = [];
+    $bookmark.notes.getting(bookmark, { then(notes) {
+        if (!notes) return;
+        indicators.push(<i className="codicon codicon-note bookmark-note" />);
+    }});
 
     return (
         <div
@@ -149,6 +157,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
         >
             <div className="controls" ref={controlsDom}>{controls}</div>
             <div className="content" ref={contentDom}>
+                <div className="indicators">{indicators}</div>
                 {markContent}
             </div>
         </div>
