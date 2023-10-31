@@ -175,6 +175,8 @@
     "react": "npm:@preact/compat",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "npm:@preact/compat"
+    "react-dom": "npm:@preact/compat",
+    "react-markdown": "^8.0.7",
+    "remark-gfm": "^3.0.1"
   }
 }
