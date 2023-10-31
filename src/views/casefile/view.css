@@ -1,5 +1,6 @@
 :root {
-    --codecasefile-notes-border: #d9d9d9;
+    --codecasefile-notes-foreground: #d9d9d9;
+    --codecasefile-notes-backgroud: #000000;
 }
 
 .line-ref {
@@ -66,9 +67,10 @@
 
 .bookmark-notes-display {
     z-index: 30;
-    /* background-color: var(--vscode-sideBar-background); */
-    background-color: #000000;
+    background-color: var(--codecasefile-notes-backgroud);
+    color: var(--codecasefile-notes-foreground);
     padding: 5px;
+    max-width: calc(100vw - 10px);
 }
 
 .bookmark-notes-display:focus-visible {

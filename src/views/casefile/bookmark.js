@@ -177,7 +177,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
     if (decoration.popoverContent) {
         const notesBorderColor = getComputedStyle(
             document.documentElement
-        ).getPropertyValue('--codecasefile-notes-border').trim();
+        ).getPropertyValue('--codecasefile-notes-foreground').trim();
         result = <Popover useArrow={notesBorderColor} offset={15} arrowAspectRatio={0.4}>
             {result}
             {decoration.popoverContent}

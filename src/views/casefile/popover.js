@@ -36,7 +36,9 @@ export const usePopover = ({
                 fallbackAxisSideDirection: preferOnCrossAxis ?? 'none',
                 padding: 5,
             }),
-            shift(5),
+            shift({
+                padding: 5,
+            }),
             ...(
                 arrowRef
                 ? [arrow({ element: arrowRef })]
