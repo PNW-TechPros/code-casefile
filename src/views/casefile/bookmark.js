@@ -8,6 +8,8 @@ import { DRAG_TYPES } from './constants';
 import { messagePoster } from './messageSending';
 import { vscontext } from '../helpers';
 import { Popover } from './popover';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const LineRef = ({ bookmark }) => (
     <div className="line-ref">
@@ -146,7 +148,10 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
         if (!notes) {return;}
         decoration.popoverContent = <Popover.Content className="bookmark-notes-display">
             <Popover.Description renderAs="div">
-                {notes /* TODO: render Markdown */}
+                <ReactMarkdown
+                    children={notes}
+                    remarkPlugins={[remarkGfm]}
+                />
             </Popover.Description>
         </Popover.Content>;
         indicators.push(<Popover.Trigger asChild>
