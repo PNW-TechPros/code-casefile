@@ -7,6 +7,7 @@ import { MOVE_BOOKMARK, OPEN_BOOKMARK } from "../../messageNames";
 import { DRAG_TYPES } from './constants';
 import { messagePoster } from './messageSending';
 import { vscontext } from '../helpers';
+import { Popover } from './popover';
 
 const LineRef = ({ bookmark }) => (
     <div className="line-ref">
@@ -115,6 +116,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
             }
         },
     }));
+    const decoration = {};
 
     const markContent = (
         $bookmark.file.get(bookmark)
@@ -141,27 +143,42 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
 
     const indicators = [];
     $bookmark.notes.getting(bookmark, { then(notes) {
-        if (!notes) return;
-        indicators.push(<i className="codicon codicon-note bookmark-note" />);
+        if (!notes) {return;}
+        decoration.popoverContent = <Popover.Content className="bookmark-notes-display">
+            <Popover.Description renderAs="div">
+                {notes /* TODO: render Markdown */}
+            </Popover.Description>
+        </Popover.Content>;
+        indicators.push(<Popover.Trigger asChild>
+            <i className="codicon codicon-note show-bookmark-notes" />
+        </Popover.Trigger>);
     }});
 
-    return (
-        <div
-            className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`}
-            ref={drop}
-            {...vscontext({
-                webviewArea: 'bookmark',
-                itemPath: [...ancestors, bookmark.id],
-                hasChildMarks: Boolean(bookmark.children?.length),
-            })}
-        >
-            <div className="controls" ref={controlsDom}>{controls}</div>
-            <div className="content" ref={contentDom}>
-                <div className="indicators">{indicators}</div>
-                {markContent}
-            </div>
+    let result = (<div
+        className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`}
+        ref={drop}
+        {...vscontext({
+            webviewArea: 'bookmark',
+            itemPath: [...ancestors, bookmark.id],
+            hasChildMarks: Boolean(bookmark.children?.length),
+        })}
+    >
+        <div className="controls" ref={controlsDom}>{controls}</div>
+        <div className="content" ref={contentDom}>
+            <div className="indicators">{indicators}</div>
+            {markContent}
         </div>
-    );
+    </div>);
+    if (decoration.popoverContent) {
+        const notesBorderColor = getComputedStyle(
+            document.documentElement
+        ).getPropertyValue('--codecasefile-notes-border').trim();
+        result = <Popover useArrow={notesBorderColor} offset={15} arrowAspectRatio={0.4}>
+            {result}
+            {decoration.popoverContent}
+        </Popover>;
+    }
+    return result;
 };
 
 const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) => {
