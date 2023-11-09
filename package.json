@@ -29,20 +29,20 @@
         }
       }
     ],
-    "icons":{
+    "icons": {
       "casefile-delete-all-bookmarks": {
         "description": "Delete all bookmarks from the current casefile",
         "default": "clear-all"
       },
-      "casefile-fetch-shared":{
+      "casefile-fetch-shared": {
         "description": "Fetch casefiles from the selected peer",
         "default": "refresh"
       },
-      "casefile-select-sharing-peer":{
+      "casefile-select-sharing-peer": {
         "description": "Select a peer for sharing casefiles",
         "default": "remote"
       },
-      "casefile-import-shared":{
+      "casefile-import-shared": {
         "description": "Import of shared casefile into current casefile",
         "default": "repo-pull"
       }
@@ -165,6 +165,7 @@
   },
   "dependencies": {
     "@devclusters/fluency": "^1.1.5",
+    "@floating-ui/react": "^0.26.1",
     "@thi.ng/hiccup": "^4.2.41",
     "@vscode/codicons": "^0.0.33",
     "git-casefile": "^1.0.5",
@@ -174,6 +175,8 @@
     "react": "npm:@preact/compat",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "npm:@preact/compat"
+    "react-dom": "npm:@preact/compat",
+    "react-markdown": "^8.0.7",
+    "remark-gfm": "^3.0.1"
   }
 }

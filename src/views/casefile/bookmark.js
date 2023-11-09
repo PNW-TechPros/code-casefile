@@ -7,6 +7,9 @@ import { MOVE_BOOKMARK, OPEN_BOOKMARK } from "../../messageNames";
 import { DRAG_TYPES } from './constants';
 import { messagePoster } from './messageSending';
 import { vscontext } from '../helpers';
+import { Popover } from './popover';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const LineRef = ({ bookmark }) => (
     <div className="line-ref">
@@ -115,6 +118,8 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
             }
         },
     }));
+    const decoration = {};
+
     const markContent = (
         $bookmark.file.get(bookmark)
         ? (
@@ -125,6 +130,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
         )
         : <h3>{$bookmark.markText.get(bookmark)}</h3>
     );
+
     const controls = [
         <span ref={drag} className="drag-handle">
             <i className="codicon codicon-gripper"></i>
@@ -137,22 +143,47 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
         controls.push(<i className={`codicon codicon-${FOLDING_ICON_MAP.default}`}></i>);
     }
 
-    return (
-        <div
-            className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`}
-            ref={drop}
-            {...vscontext({
-                webviewArea: 'bookmark',
-                itemPath: [...ancestors, bookmark.id],
-                hasChildMarks: Boolean(bookmark.children?.length),
-            })}
-        >
-            <div className="controls" ref={controlsDom}>{controls}</div>
-            <div className="content" ref={contentDom}>
-                {markContent}
-            </div>
+    const indicators = [];
+    $bookmark.notes.getting(bookmark, { then(notes) {
+        if (!notes) {return;}
+        decoration.popoverContent = <Popover.Content className="bookmark-notes-display">
+            <Popover.Description renderAs="div">
+                <ReactMarkdown
+                    children={notes}
+                    remarkPlugins={[remarkGfm]}
+                />
+            </Popover.Description>
+        </Popover.Content>;
+        indicators.push(<Popover.Trigger asChild>
+            <i className="codicon codicon-note show-bookmark-notes" />
+        </Popover.Trigger>);
+    }});
+
+    let result = (<div
+        className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`}
+        ref={drop}
+        {...vscontext({
+            webviewArea: 'bookmark',
+            itemPath: [...ancestors, bookmark.id],
+            hasChildMarks: Boolean(bookmark.children?.length),
+        })}
+    >
+        <div className="controls" ref={controlsDom}>{controls}</div>
+        <div className="content" ref={contentDom}>
+            <div className="indicators">{indicators}</div>
+            {markContent}
         </div>
-    );
+    </div>);
+    if (decoration.popoverContent) {
+        const notesBorderColor = getComputedStyle(
+            document.documentElement
+        ).getPropertyValue('--codecasefile-notes-foreground').trim();
+        result = <Popover useArrow={notesBorderColor} offset={15} arrowAspectRatio={0.4}>
+            {result}
+            {decoration.popoverContent}
+        </Popover>;
+    }
+    return result;
 };
 
 const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) => {
