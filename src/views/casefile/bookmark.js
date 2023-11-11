@@ -4,12 +4,11 @@ import { useRef } from 'preact/hooks';
 import { useDrag, useDrop } from 'react-dnd';
 import { $bookmark } from "../../datumPlans";
 import { MOVE_BOOKMARK, OPEN_BOOKMARK } from "../../messageNames";
+import { BookmarkNotes } from "./bookmarkNotes";
 import { DRAG_TYPES } from './constants';
 import { messagePoster } from './messageSending';
 import { vscontext } from '../helpers';
 import { Popover } from './popover';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 const LineRef = ({ bookmark }) => (
     <div className="line-ref">
@@ -143,15 +142,14 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
         controls.push(<i className={`codicon codicon-${FOLDING_ICON_MAP.default}`}></i>);
     }
 
+    const updateNotes = () => {};
+
     const indicators = [];
     $bookmark.notes.getting(bookmark, { then(notes) {
         if (!notes) {return;}
         decoration.popoverContent = <Popover.Content className="bookmark-notes-display">
             <Popover.Description renderAs="div">
-                <ReactMarkdown
-                    children={notes}
-                    remarkPlugins={[remarkGfm]}
-                />
+                <BookmarkNotes content={notes} onContentChange={updateNotes} />
             </Popover.Description>
         </Popover.Content>;
         indicators.push(<Popover.Trigger asChild>
