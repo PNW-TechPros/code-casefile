@@ -1,6 +1,7 @@
 :root {
     --codecasefile-notes-foreground: #d9d9d9;
     --codecasefile-notes-background: #000000;
+    --codecasefile-notes-button-hover: #3a3a3a;
 }
 
 .line-ref {
@@ -111,6 +112,10 @@
 
 .bookmark-notes-content.editor .controls *:not(.chrome) {
     cursor: pointer;
+}
+
+.bookmark-notes-content.editor .controls *:not(.chrome):hover {
+    background-color: var(--codecasefile-notes-button-hover);
 }
 
 .bookmark-notes-content.editor .accept-bookmark-notes {
