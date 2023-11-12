@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import * as vscode from 'vscode';
 import { debug } from './debugLog';
-import { DELETE_BOOKMARK, MOVE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL } from './messageNames';
+import { DELETE_BOOKMARK, MOVE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL, UPDATE_NOTE } from './messageNames';
 import Services from './services';
 import { connectWebview, dispatchMessage, messageHandler } from './webviewHelper';
 import { cloneDeep, thru } from 'lodash';
@@ -331,6 +331,25 @@ export class CasefileView implements vscode.WebviewViewProvider {
                 return false;
             }
             markList?.splice(delIndex, 1);
+            return true;
+        });
+    }
+
+    async [messageHandler(UPDATE_NOTE)](data: any): Promise<void> {
+        const { itemPath = [], content = '' } = data || {};
+        debug("Starting to update note content on %O", itemPath);
+        await this._modifyCasefileContent((casefile) => {
+            const bookmarkForest = casefile.bookmarks || [];
+            const modPath = getMarkPath(bookmarkForest, itemPath);
+            debug("Resolved itemPath %O to effective path %O", itemPath, modPath);
+            if (modPath.length === 0) {
+                return false;
+            }
+            const { mark } = modPath.pop() || {};
+            if (!mark) {
+                return false;
+            }
+            mark.notes = content;
             return true;
         });
     }

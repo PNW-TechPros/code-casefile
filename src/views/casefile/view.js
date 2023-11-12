@@ -11,7 +11,8 @@ import "./view.css";
 import { MessagePasser, messagePoster } from './messageSending';
 import { DRAG_TYPES } from './constants';
 import { vscontext, NO_STD_CMENU_ENTRIES, when } from '../helpers';
-import { DELETE_BOOKMARK, REQUEST_INITIAL_FILL } from '../../messageNames';
+import { DELETE_BOOKMARK, REQUEST_INITIAL_FILL, UPDATE_NOTE } from '../../messageNames';
+import getMarkPath from './getMarkPath';
 
 const vscode = acquireVsCodeApi();
 
@@ -112,6 +113,7 @@ const computeDestShadowLocation = ({ dragHover, elementRects, shadowHeight }) =>
 };
 
 const Bookmarks = ({ state }) => {
+    const [ noteEditingStarted, setNoteEditingStarted ] = useState(undefined);
     const [ dragging, setDragging ] = useState(false);
     const dragDropManager = useDragDropManager();
     const dragMonitor = dragDropManager.getMonitor();
@@ -156,12 +158,24 @@ const Bookmarks = ({ state }) => {
         // Move the shadow to the location
         Object.assign(dropShadowElt.style, shadowStyleAttrs);
     }), [dragMonitor]);
+    const updateNote = messagePoster(UPDATE_NOTE);
 
+    const ps = {};
+    ps.editNote = () => setNoteEditingStarted(true);
+    ps.activeNote = {
+        editingStarted: noteEditingStarted,
+        startEdit: () => setNoteEditingStarted(Date.now()),
+        cancelEdit: () => setNoteEditingStarted(undefined),
+        updateNote: (itemPath, newNoteContent) => {
+            updateNote({ itemPath, content: newNoteContent });
+            setNoteEditingStarted(undefined);
+        },
+    };
     return <div className="casefile-ui" {...vscontext(NO_STD_CMENU_ENTRIES)}>
         <div className="bookmarks-forest">
             {...Array.from(
                 $casefile.bookmarks.getIterable(state),
-                bookmark => <Bookmark tree={bookmark} key={bookmark.id}/>
+                bookmark => <Bookmark tree={bookmark} key={bookmark.id} ps={ps}/>
             )}
         </div>
         { when(dragging, <div className="drop-shadow" ref={dropShadowRef} />) }

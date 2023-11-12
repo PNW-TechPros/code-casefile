@@ -73,7 +73,7 @@ const FOLDING_ICON_MAP = {
     'expanded': 'chevron-down',
     'default': 'blank',
 };
-const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
+const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding, ps = {} }) => {
     // The `messagePoster`s have to be instantiated here because they `useContext`
     const showInEditor = messagePoster(OPEN_BOOKMARK);
     const moveBookmark = messagePoster(MOVE_BOOKMARK);
@@ -149,7 +149,11 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
         if (!notes) {return;}
         decoration.popoverContent = <Popover.Content className="bookmark-notes-display">
             <Popover.Description renderAs="div">
-                <BookmarkNotes content={notes} onContentChange={updateNotes} />
+                <BookmarkNotes
+                    itemPath={[...ancestors, bookmark.id]}
+                    content={notes} onContentChange={updateNotes}
+                    noteState={ps.activeNote}
+                />
             </Popover.Description>
         </Popover.Content>;
         indicators.push(<Popover.Trigger asChild>
@@ -184,7 +188,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
     return result;
 };
 
-const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) => {
+const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false, ps = {} }) => {
     const nodeIdPath = [...ancestors, treeNode.id];
     const [{ isDragging }, drag, preview] = useDrag(() => ({
         type: DRAG_TYPES.BOOKMARK,
@@ -205,6 +209,7 @@ const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) 
                     key={subTree.id}
                     ancestors={nodeIdPath}
                     ancestorDragging={ancestorDragging || isDragging}
+                    {...{ ps }}
                 />
             )
         )
@@ -223,7 +228,7 @@ const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) 
             <MarkInfo
                 bookmark={omit(treeNode, ['children'])}
                 dragging={ancestorDragging || isDragging}
-                {...{ ancestors, drag, folding }}
+                {...{ ancestors, drag, folding, ps }}
             />
             {...shownChildren}
         </div>
