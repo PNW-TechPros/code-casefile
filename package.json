@@ -76,6 +76,12 @@
         "title": "Import this casefile into current",
         "category": "Casefile",
         "icon": "$(casefile-import-shared)"
+      },
+      {
+        "command": "codeCasefile.editBookmarkNote",
+        "title": "Edit the bookmark note",
+        "category": "Casefile",
+        "icon": "${edit}"
       }
     ],
     "menus": {
@@ -83,6 +89,10 @@
         {
           "command": "codeCasefile.deleteBookmark",
           "when": "false"
+        },
+        {
+          "command": "codeCasefile.editBookmarkNote",
+          "when": "codeCasefile.notesShowing"
         }
       ],
       "view/item/context": [

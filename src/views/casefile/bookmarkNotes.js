@@ -1,10 +1,19 @@
-import React, { useMemo, useRef } from 'preact/compat';
+import React, { useEffect, useMemo, useRef } from 'preact/compat';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from "remark-gfm";
 import { vscontext } from '../helpers';
+import { messagePoster } from './messageSending';
+import { SET_NOTES_DISPLAYING } from '../../messageNames';
 
 export const BookmarkNotes = ({ itemPath, content, noteState = {} }) => {
     const mountTime = useMemo(() => Date.now(), []);
+    const sendNoteDisplayState = messagePoster(SET_NOTES_DISPLAYING);
+    useEffect(() => {
+        sendNoteDisplayState({ displaying: true });
+        return () => {
+            sendNoteDisplayState({ displaying: false });
+        };
+    }, []);
 
     if (!(noteState.editingStarted >= mountTime)) {
         const noteClicked = (event) => {

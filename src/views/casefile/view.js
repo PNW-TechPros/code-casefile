@@ -13,11 +13,13 @@ import { DRAG_TYPES } from './constants';
 import { vscontext, NO_STD_CMENU_ENTRIES, when } from '../helpers';
 import { DELETE_BOOKMARK, REQUEST_INITIAL_FILL, UPDATE_NOTE } from '../../messageNames';
 import getMarkPath from './getMarkPath';
+import { eventTime, newEvent, projectEventStream } from '../eventStream';
+import { thru } from 'lodash';
 
 const vscode = acquireVsCodeApi();
 
 const BindMessageHandling = ({ stateManagement }) => {
-    useEffect(applicationOfMessagesToState(...stateManagement), []);
+    useEffect(applicationOfMessagesToState(...stateManagement), [ ...stateManagement ]);
     return null;
 };
 
@@ -113,7 +115,9 @@ const computeDestShadowLocation = ({ dragHover, elementRects, shadowHeight }) =>
 };
 
 const Bookmarks = ({ state }) => {
-    const [ noteEditingStarted, setNoteEditingStarted ] = useState(undefined);
+    const [ noteEditingOpened, setNoteEditingOpened ] = useState(
+        newEvent({ state: false })
+    );
     const [ dragging, setDragging ] = useState(false);
     const dragDropManager = useDragDropManager();
     const dragMonitor = dragDropManager.getMonitor();
@@ -161,14 +165,16 @@ const Bookmarks = ({ state }) => {
     const updateNote = messagePoster(UPDATE_NOTE);
 
     const ps = {};
-    ps.editNote = () => setNoteEditingStarted(true);
     ps.activeNote = {
-        editingStarted: noteEditingStarted,
-        startEdit: () => setNoteEditingStarted(Date.now()),
-        cancelEdit: () => setNoteEditingStarted(undefined),
+        editingStarted: thru(
+            projectEventStream(noteEditingOpened, state.noteEditorOpened),
+            projection => projection.state ? eventTime(projection) : undefined
+        ),
+        startEdit: () => setNoteEditingOpened(newEvent({ state: true })),
+        cancelEdit: () => setNoteEditingOpened(newEvent({ state: false })),
         updateNote: (itemPath, newNoteContent) => {
             updateNote({ itemPath, content: newNoteContent });
-            setNoteEditingStarted(undefined);
+            setNoteEditingOpened(newEvent({ state: false }));
         },
     };
     return <div className="casefile-ui" {...vscontext(NO_STD_CMENU_ENTRIES)}>
