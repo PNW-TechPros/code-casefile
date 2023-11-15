@@ -87,6 +87,11 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		},
 
+		importTextCasefile: async () => {
+			debug("Importing casefile from current editor");
+			casefileView.importFromCurrentEditor();
+		},
+
 		selectSharingPeer: async () => {
 			debug("Asking user to select sharing peer");
 			await sharingManager.promptUserForPeer();

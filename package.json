@@ -76,6 +76,11 @@
         "title": "Import this casefile into current",
         "category": "Casefile",
         "icon": "$(casefile-import-shared)"
+      },
+      {
+        "command": "codeCasefile.importTextCasefile",
+        "title": "Import casefile bookmarks",
+        "category": "Casefile"
       }
     ],
     "menus": {
@@ -83,6 +88,17 @@
         {
           "command": "codeCasefile.deleteBookmark",
           "when": "false"
+        },
+        {
+          "command": "codeCasefile.importTextCasefile",
+          "when": "codeCasefile.casefileInEditor"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "codeCasefile.importTextCasefile",
+          "group": "c_casefile",
+          "when": "codeCasefile.casefileInEditor"
         }
       ],
       "view/item/context": [
