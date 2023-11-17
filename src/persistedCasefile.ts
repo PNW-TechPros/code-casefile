@@ -1,8 +1,9 @@
-import { forEach, isUndefined, tap, thru } from "lodash";
+import { forEach, isUndefined, last, tap, thru } from "lodash";
 import { Bookmark } from "./Bookmark";
+import { Casefile } from "./Casefile";
 
-export const beginMarker = '=============================== BEGIN CASEFILE ===============================';
-export const endMarker   = '================================ END CASEFILE ================================';
+export const beginMarker = '=============================== BEGIN CASEFILE =============================';
+export const endMarker   = '================================ END CASEFILE ==============================';
 
 export class InvalidCasefile extends Error {
     constructor() {
@@ -97,3 +98,68 @@ export const readPersisted = (lines: Iterable<string>): Bookmark[] => tap<Bookma
         state = nextState;
     }
 });
+
+const lineRef = (bookmark: Bookmark): string => (
+    bookmark.peg
+    ? `${bookmark.peg.commit.slice(0, 10)}:${bookmark.file}@${bookmark.peg.line}`
+    : `${bookmark.file}@${bookmark.line}`
+);
+
+function* generatePersistedLines(bookmarks: Bookmark[], { name }: { name?: string } = {}): Generator<string> {
+    const fileDesc = name ? `Casefile - ${name}` : `Exported Casefile`;
+    yield `# ${fileDesc}\n\n`;
+
+    const remainingLevels: Bookmark[][] = [[...bookmarks].reverse()];
+    while (remainingLevels.length) {
+        const bookmark = last(remainingLevels)?.pop();
+        if (!bookmark) {
+            remainingLevels.pop();
+            continue;
+        }
+
+        const indent = '  '.repeat(remainingLevels.length - 1);
+        if (bookmark.file) {
+            yield `${indent}* [${lineRef(bookmark)}] ${bookmark.markText}\n`;
+        } else {
+            yield `${indent}* ${bookmark.markText}\n`;
+        }
+        if (bookmark.notes) {
+            const noteLines = bookmark.notes.trimEnd().split(/(?: |\t)*(?:\r\n?|\n)/);
+            if (noteLines.length) {
+                yield '\n';
+            }
+            for (const line of noteLines) {
+                const trimmedLine = line.trimEnd();
+                if (trimmedLine) {
+                    yield `${indent}  ${trimmedLine}\n`;
+                } else {
+                    yield '\n';
+                }
+            }
+        }
+        yield '\n';
+
+        if (bookmark.children?.length) {
+            remainingLevels.push([...bookmark.children].reverse());
+        }
+    }
+
+    yield beginMarker + '\n';
+
+    const cfBase64 = Buffer.from(JSON.stringify(bookmarks), 'utf8').toString('base64'), step = 68;
+    for (let ls = 0; ls < cfBase64.length; ls += step) {
+        yield `    ${cfBase64.slice(ls, ls + step)}\n`;
+    }
+
+    yield endMarker + '\n';
+}
+
+export const makePersisted = (casefile: Casefile): string => {
+    const name = thru(casefile.path, (path) => {
+        if (!path) {
+            return;
+        }
+        return path.split('/').slice(0, -1).join('/');
+    });
+    return Array.from(generatePersistedLines(casefile.bookmarks || [], { name })).join('');
+};

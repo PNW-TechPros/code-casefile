@@ -10,7 +10,7 @@ import type { Bookmark } from './Bookmark';
 import type { Casefile } from './Casefile';
 import nextId from './idGen';
 import { setContext } from './vscodeUtils';
-import { readPersisted } from './persistedCasefile';
+import { makePersisted, readPersisted } from './persistedCasefile';
 
 type MarkPathStep = {
     index: number,
@@ -156,6 +156,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
         }
         return this._modifyCasefileContent((casefile) => {
             casefile.bookmarks = [];
+            delete casefile.path;
             return true;
         });
 	}
@@ -180,6 +181,20 @@ export class CasefileView implements vscode.WebviewViewProvider {
                 return true;
             });
         }
+    }
+
+    async exportToNewEditor() {
+        const casefile = this._getCasefileContent();
+        const { bookmarks } = casefile;
+        if (!bookmarks?.length) {
+            vscode.window.showErrorMessage("No bookmarks to export!");
+            return;
+        }
+        const document = await vscode.workspace.openTextDocument({
+            language: 'markdown',
+            content: makePersisted(casefile),
+        });
+        await vscode.window.showTextDocument(document);
     }
 
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {

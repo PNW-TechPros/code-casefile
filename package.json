@@ -81,12 +81,21 @@
         "command": "codeCasefile.importTextCasefile",
         "title": "Import casefile bookmarks",
         "category": "Casefile"
+      },
+      {
+        "command": "codeCasefile.exportTextCasefile",
+        "title": "Open as text in editor",
+        "category": "Casefile"
       }
     ],
     "menus": {
       "commandPalette": [
         {
           "command": "codeCasefile.deleteBookmark",
+          "when": "false"
+        },
+        {
+          "command": "codeCasefile.exportTextCasefile",
           "when": "false"
         },
         {
@@ -111,6 +120,10 @@
       "view/title": [
         {
           "command": "codeCasefile.deleteAllBookmarks",
+          "when": "view == 'codeCasefile.casefileView'"
+        },
+        {
+          "command": "codeCasefile.exportTextCasefile",
           "when": "view == 'codeCasefile.casefileView'"
         },
         {
