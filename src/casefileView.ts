@@ -4,11 +4,13 @@ import { debug } from './debugLog';
 import { DELETE_BOOKMARK, MOVE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL, SET_NOTES_DISPLAYING, UPDATE_NOTE } from './messageNames';
 import Services from './services';
 import { connectWebview, dispatchMessage, messageHandler } from './webviewHelper';
-import { cloneDeep, thru } from 'lodash';
+import { cloneDeep, debounce, thru, update } from 'lodash';
 import path = require('path');
 import type { Bookmark } from './Bookmark';
 import type { Casefile } from './Casefile';
 import nextId from './idGen';
+import { setContext } from './vscodeUtils';
+import { makePersisted, readPersisted } from './persistedCasefile';
 
 type MarkPathStep = {
     index: number,
@@ -16,8 +18,12 @@ type MarkPathStep = {
     in: Bookmark[],
 };
 
-const DELETE_SUBTREE = "Eliminate subtree";
-const PROMOTE_CHILDREN = "Promote child marks";
+const DOC_CHANGE_DEBOUNCE = 700;
+
+const DELETE_SUBTREE = "Eliminate whole subtree";
+const PROMOTE_CHILDREN = "Replace bookmark with its children";
+
+const CASEFILE_IN_EDITOR_CONTEXT_KEY = 'casefileInEditor';
 
 export class CasefileView implements vscode.WebviewViewProvider {
     public static readonly viewType = 'codeCasefile.casefileView';
@@ -43,6 +49,32 @@ export class CasefileView implements vscode.WebviewViewProvider {
                 }
             }
         }));
+        // When focus moves to a new text editor, look for a serialized casefile in the contents
+        this._disposables.push(vscode.window.onDidChangeActiveTextEditor((editor) => {
+            if (editor) {
+                this._scanDocumentForCasefile(editor.document);
+            } else {
+                setContext(CASEFILE_IN_EDITOR_CONTEXT_KEY, false);
+            }
+        }));
+        // When the currently focused text document changes, scan it for a serialized casefile
+        // (debounced with DOC_CHANGE_DEBOUNCE window)
+        thru(
+            debounce(
+                (document) => this._scanDocumentForCasefile(document),
+                DOC_CHANGE_DEBOUNCE,
+                { trailing: true }
+            ),
+            (scanDocument) => {
+                this._disposables.push(vscode.workspace.onDidChangeTextDocument(
+                    ({ document }) => {
+                        if (document === vscode.window.activeTextEditor?.document) {
+                            scanDocument(document);
+                        }
+                    }
+                ));
+            }
+        );
     }
 
     dispose() {
@@ -93,16 +125,16 @@ export class CasefileView implements vscode.WebviewViewProvider {
                     "The selected bookmark has children",
                     {
                         modal: true,
-                        detail: "All descendant marks of the selected bookmark will also be deleted.",
                     },
+                    PROMOTE_CHILDREN,
                     DELETE_SUBTREE,
                 );
                 switch (choice) {
                     case undefined:
                         return false;
-                    // case PROMOTE_CHILDREN:
-                    //     substitutions.push(...mark.children);
-                    //     break;
+                    case PROMOTE_CHILDREN:
+                        substitutions.push(...mark.children);
+                        break;
                 }
             }
             markList?.splice(delIndex, 1, ...substitutions);
@@ -124,12 +156,49 @@ export class CasefileView implements vscode.WebviewViewProvider {
         }
         return this._modifyCasefileContent((casefile) => {
             casefile.bookmarks = [];
+            delete casefile.path;
             return true;
         });
     }
 
     openNoteEditor() {
         this._view?.webview.postMessage({ type: 'editNotes' });
+    }
+
+    async importFromCurrentEditor() {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        const newBookmarks = bookmarksFromDocument(editor.document);
+        if (newBookmarks.length !== 0) {
+            await this._modifyCasefileContent((casefile) => {
+                if (!casefile.bookmarks?.length) {
+                    casefile.bookmarks = newBookmarks;
+                } else {
+                    casefile.bookmarks.push({
+                        id: nextId(),
+                        markText: "Imported bookmarks",
+                        children: newBookmarks,
+                    });
+                }
+                return true;
+            });
+        }
+    }
+
+    async exportToNewEditor() {
+        const casefile = this._getCasefileContent();
+        const { bookmarks } = casefile;
+        if (!bookmarks?.length) {
+            vscode.window.showErrorMessage("No bookmarks to export!");
+            return;
+        }
+        const document = await vscode.workspace.openTextDocument({
+            language: 'markdown',
+            content: makePersisted(casefile),
+        });
+        await vscode.window.showTextDocument(document);
     }
 
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
@@ -232,6 +301,25 @@ export class CasefileView implements vscode.WebviewViewProvider {
 
     private _getCasefileContent() {
         return this._services.getCurrentForest();
+    }
+
+    private _scanDocumentForCasefile(document: vscode.TextDocument) {
+        const casefilePresent: boolean = thru(null, () => {
+            if (document.lineCount === 0) {
+                return false;
+            }
+
+            const bookmarks = thru(null, () => {
+                try {
+                    return bookmarksFromDocument(document);
+                } catch (error) {
+                    return [];
+                }
+            });
+
+            return bookmarks.length > 0;
+        });
+        setContext(CASEFILE_IN_EDITOR_CONTEXT_KEY, casefilePresent);
     }
 
     async [messageHandler(REQUEST_INITIAL_FILL)](data: any): Promise<void> {
@@ -382,6 +470,15 @@ export class CasefileView implements vscode.WebviewViewProvider {
             return true;
         });
     }
+}
+
+function bookmarksFromDocument(document: vscode.TextDocument): Bookmark[] {
+    const { lineCount } = document;
+    return readPersisted(thru(null, function* () {
+        for (let i = 0; i < lineCount; i++) {
+            yield document.lineAt(i).text;
+        }
+    }));
 }
 
 function buildString(

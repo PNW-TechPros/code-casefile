@@ -78,6 +78,16 @@
         "icon": "$(casefile-import-shared)"
       },
       {
+        "command": "codeCasefile.importTextCasefile",
+        "title": "Import casefile bookmarks",
+        "category": "Casefile"
+      },
+      {
+        "command": "codeCasefile.exportTextCasefile",
+        "title": "Open as text in editor",
+        "category": "Casefile"
+      },
+      {
         "command": "codeCasefile.editBookmarkNote",
         "title": "Edit the bookmark note",
         "category": "Casefile",
@@ -93,6 +103,21 @@
         {
           "command": "codeCasefile.editBookmarkNote",
           "when": "codeCasefile.notesShowing"
+        },
+        {
+          "command": "codeCasefile.exportTextCasefile",
+          "when": "false"
+        },
+        {
+          "command": "codeCasefile.importTextCasefile",
+          "when": "codeCasefile.casefileInEditor"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "codeCasefile.importTextCasefile",
+          "group": "c_casefile",
+          "when": "codeCasefile.casefileInEditor"
         }
       ],
       "view/item/context": [
@@ -105,6 +130,10 @@
       "view/title": [
         {
           "command": "codeCasefile.deleteAllBookmarks",
+          "when": "view == 'codeCasefile.casefileView'"
+        },
+        {
+          "command": "codeCasefile.exportTextCasefile",
           "when": "view == 'codeCasefile.casefileView'"
         },
         {

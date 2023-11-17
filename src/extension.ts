@@ -65,6 +65,11 @@ export async function activate(context: vscode.ExtensionContext) {
 			casefileView.deleteBookmark(itemPath);
 		},
 
+		exportTextCasefile: async () => {
+			debug("Exporting casefile to text");
+			casefileView.exportToNewEditor();
+		},
+
 		fetchCasefilesFromPeer: async () => {
 			debug("Fetching casefile from peer");
 			await sharingManager.fetchFromCurrentPeer();
@@ -85,6 +90,11 @@ export async function activate(context: vscode.ExtensionContext) {
 					importedBookmarks
 				);
 			}
+		},
+
+		importTextCasefile: async () => {
+			debug("Importing casefile from current editor");
+			casefileView.importFromCurrentEditor();
 		},
 
 		selectSharingPeer: async () => {
