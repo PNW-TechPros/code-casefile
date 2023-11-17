@@ -156,6 +156,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
         }
         return this._modifyCasefileContent((casefile) => {
             casefile.bookmarks = [];
+            delete casefile.path;
             return true;
         });
 	}
@@ -183,14 +184,15 @@ export class CasefileView implements vscode.WebviewViewProvider {
     }
 
     async exportToNewEditor() {
-        const bookmarks = this._getCasefileContent().bookmarks;
+        const casefile = this._getCasefileContent();
+        const { bookmarks } = casefile;
         if (!bookmarks?.length) {
             vscode.window.showErrorMessage("No bookmarks to export!");
             return;
         }
         const document = await vscode.workspace.openTextDocument({
-            language: 'plaintext',
-            content: makePersisted(bookmarks),
+            language: 'markdown',
+            content: makePersisted(casefile),
         });
         await vscode.window.showTextDocument(document);
     }

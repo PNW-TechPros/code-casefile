@@ -1,8 +1,9 @@
 import { forEach, isUndefined, last, tap, thru } from "lodash";
 import { Bookmark } from "./Bookmark";
+import { Casefile } from "./Casefile";
 
-export const beginMarker = '=============================== BEGIN CASEFILE ===============================';
-export const endMarker   = '================================ END CASEFILE ================================';
+export const beginMarker = '=============================== BEGIN CASEFILE =============================';
+export const endMarker   = '================================ END CASEFILE ==============================';
 
 export class InvalidCasefile extends Error {
     constructor() {
@@ -104,8 +105,9 @@ const lineRef = (bookmark: Bookmark): string => (
     : `${bookmark.file}@${bookmark.line}`
 );
 
-function* generatePersistedLines(bookmarks: Bookmark[]): Generator<string> {
-    yield "# Exported Casefile\n\n";
+function* generatePersistedLines(bookmarks: Bookmark[], { name }: { name?: string } = {}): Generator<string> {
+    const fileDesc = name ? `Casefile - ${name}` : `Exported Casefile`;
+    yield `# ${fileDesc}\n\n`;
 
     const remainingLevels: Bookmark[][] = [[...bookmarks].reverse()];
     while (remainingLevels.length) {
@@ -146,12 +148,18 @@ function* generatePersistedLines(bookmarks: Bookmark[]): Generator<string> {
 
     const cfBase64 = Buffer.from(JSON.stringify(bookmarks), 'utf8').toString('base64'), step = 68;
     for (let ls = 0; ls < cfBase64.length; ls += step) {
-        yield `     ${cfBase64.slice(ls, ls + step)}\n`;
+        yield `    ${cfBase64.slice(ls, ls + step)}\n`;
     }
 
     yield endMarker + '\n';
 }
 
-export const makePersisted = (bookmarks: Bookmark[]): string => {
-    return Array.from(generatePersistedLines(bookmarks)).join('');
+export const makePersisted = (casefile: Casefile): string => {
+    const name = thru(casefile.path, (path) => {
+        if (!path) {
+            return;
+        }
+        return path.split('/').slice(0, -1).join('/');
+    });
+    return Array.from(generatePersistedLines(casefile.bookmarks || [], { name })).join('');
 };
