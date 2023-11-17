@@ -10,7 +10,7 @@ import type { Bookmark } from './Bookmark';
 import type { Casefile } from './Casefile';
 import nextId from './idGen';
 import { setContext } from './vscodeUtils';
-import { readPersisted } from './persistedCasefile';
+import { makePersisted, readPersisted } from './persistedCasefile';
 
 type MarkPathStep = {
     index: number,
@@ -180,6 +180,19 @@ export class CasefileView implements vscode.WebviewViewProvider {
                 return true;
             });
         }
+    }
+
+    async exportToNewEditor() {
+        const bookmarks = this._getCasefileContent().bookmarks;
+        if (!bookmarks?.length) {
+            vscode.window.showErrorMessage("No bookmarks to export!");
+            return;
+        }
+        const document = await vscode.workspace.openTextDocument({
+            language: 'plaintext',
+            content: makePersisted(bookmarks),
+        });
+        await vscode.window.showTextDocument(document);
     }
 
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
