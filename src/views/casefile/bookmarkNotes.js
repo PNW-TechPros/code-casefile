@@ -55,6 +55,12 @@ export const BookmarkNotes = ({ itemPath, content, noteState = {} }) => {
                 popoverContext.setOpen(false);
             }
         };
+        const isMac = window.navigator?.platform?.match(/^(?:Mac[A-Z]|iPhone)/);
+        const onKeyDown = (event) => {
+            if (event.keyCode === 13 && event[isMac ? 'metaKey' : 'ctrlKey']) {
+                acceptNewContent();
+            }
+        };
         return <div className="bookmark-notes-content editor">
             <div className="controls">
                 <i className="codicon codicon-check accept-bookmark-notes"
@@ -64,6 +70,7 @@ export const BookmarkNotes = ({ itemPath, content, noteState = {} }) => {
             </div>
             <textarea className="content-editor" ref={markdownEditorRef}
                 defaultValue={content}
+                {...{ onKeyDown }}
             />
         </div>;
     }
