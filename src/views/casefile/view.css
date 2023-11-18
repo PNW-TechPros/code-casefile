@@ -1,6 +1,7 @@
 :root {
     --codecasefile-notes-foreground: #d9d9d9;
     --codecasefile-notes-background: #000000;
+    --codecasefile-notes-button-hover: #3a3a3a;
 }
 
 .line-ref {
@@ -65,16 +66,72 @@
     cursor: context-menu;
 }
 
+.show-bookmark-notes.missing:not([data-state="open"]) {
+    opacity: 0;
+}
+
+.bookmark:hover .show-bookmark-notes.missing {
+    opacity: 0.5;
+}
+
 .bookmark-notes-display {
     z-index: 30;
     background-color: var(--codecasefile-notes-background);
     color: var(--codecasefile-notes-foreground);
-    padding: 5px;
     max-width: calc(100vw - 10px);
 }
 
 .bookmark-notes-display:focus-visible {
     outline: none;
+}
+
+.bookmark-notes-content {
+    padding: 5px;
+}
+
+.bookmark-notes-content:not(.editor) * {
+    margin-bottom: 0.7em;
+}
+
+.bookmark-notes-content *:last-child {
+    margin-bottom: 0;
+}
+
+.bookmark-notes-content.editor {
+    display: grid;
+    grid-template-columns: [content-start] auto [content-end controls-start] 1em [controls-end];
+}
+
+.bookmark-notes-content.editor .content-editor {
+    grid-row: 1;
+    grid-column: content;
+    width: calc(100vw - 5em);
+    min-height: 7em;
+    resize: vertical;
+}
+
+.bookmark-notes-content.editor .controls {
+    grid-row: 1;
+    grid-column: controls;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+}
+
+.bookmark-notes-content.editor .controls *:not(.chrome) {
+    cursor: pointer;
+}
+
+.bookmark-notes-content.editor .controls *:not(.chrome):hover {
+    background-color: var(--codecasefile-notes-button-hover);
+}
+
+.bookmark-notes-content.editor .accept-bookmark-notes {
+    color: hsl(120, 100%, 64%);
+}
+
+.bookmark-notes-content.editor .forsake-bookmark-notes {
+    color: hsl(0, 100%, 35%);
 }
 
 .casefile-ui {

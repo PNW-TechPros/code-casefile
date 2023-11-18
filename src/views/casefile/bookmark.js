@@ -4,12 +4,11 @@ import { useRef } from 'preact/hooks';
 import { useDrag, useDrop } from 'react-dnd';
 import { $bookmark } from "../../datumPlans";
 import { MOVE_BOOKMARK, OPEN_BOOKMARK } from "../../messageNames";
+import { BookmarkNotes } from "./bookmarkNotes";
 import { DRAG_TYPES } from './constants';
 import { messagePoster } from './messageSending';
 import { vscontext } from '../helpers';
 import { Popover } from './popover';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 const LineRef = ({ bookmark }) => (
     <div className="line-ref">
@@ -74,7 +73,7 @@ const FOLDING_ICON_MAP = {
     'expanded': 'chevron-down',
     'default': 'blank',
 };
-const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
+const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding, ps = {} }) => {
     // The `messagePoster`s have to be instantiated here because they `useContext`
     const showInEditor = messagePoster(OPEN_BOOKMARK);
     const moveBookmark = messagePoster(MOVE_BOOKMARK);
@@ -143,21 +142,22 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
         controls.push(<i className={`codicon codicon-${FOLDING_ICON_MAP.default}`}></i>);
     }
 
+    const updateNotes = () => {};
+
     const indicators = [];
-    $bookmark.notes.getting(bookmark, { then(notes) {
-        if (!notes) {return;}
-        decoration.popoverContent = <Popover.Content className="bookmark-notes-display">
-            <Popover.Description renderAs="div">
-                <ReactMarkdown
-                    children={notes}
-                    remarkPlugins={[remarkGfm]}
-                />
-            </Popover.Description>
-        </Popover.Content>;
-        indicators.push(<Popover.Trigger asChild>
-            <i className="codicon codicon-note show-bookmark-notes" />
-        </Popover.Trigger>);
-    }});
+    const notes = $bookmark.notes.get(bookmark) || '';
+    decoration.popoverContent = <Popover.Content className="bookmark-notes-display">
+        <Popover.Description renderAs="div">
+            <BookmarkNotes
+                itemPath={[...ancestors, bookmark.id]}
+                content={notes} onContentChange={updateNotes}
+                noteState={ps.activeNote}
+            />
+        </Popover.Description>
+    </Popover.Content>;
+    indicators.push(<Popover.Trigger asChild>
+        <i className={`codicon codicon-note show-bookmark-notes ${notes ? '' : 'missing'}`} />
+    </Popover.Trigger>);
 
     let result = (<div
         className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`}
@@ -186,7 +186,7 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding }) => {
     return result;
 };
 
-const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) => {
+const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false, ps = {} }) => {
     const nodeIdPath = [...ancestors, treeNode.id];
     const [{ isDragging }, drag, preview] = useDrag(() => ({
         type: DRAG_TYPES.BOOKMARK,
@@ -207,6 +207,7 @@ const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) 
                     key={subTree.id}
                     ancestors={nodeIdPath}
                     ancestorDragging={ancestorDragging || isDragging}
+                    {...{ ps }}
                 />
             )
         )
@@ -225,7 +226,7 @@ const Bookmark = ({ tree: treeNode, ancestors = [], ancestorDragging = false }) 
             <MarkInfo
                 bookmark={omit(treeNode, ['children'])}
                 dragging={ancestorDragging || isDragging}
-                {...{ ancestors, drag, folding }}
+                {...{ ancestors, drag, folding, ps }}
             />
             {...shownChildren}
         </div>

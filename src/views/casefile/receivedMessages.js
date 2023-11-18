@@ -1,4 +1,5 @@
 import { thru } from 'lodash';
+import { newEvent } from '../eventStream';
 
 const MESSAGE_HANDLERS = new Map();
 function handleExtensionMessage(type, handler) {
@@ -51,4 +52,12 @@ handleExtensionMessage('setViewState', ({ value }, context) => {
         return;
     }
     context.setState(value);
+});
+
+handleExtensionMessage('editNotes', (_, context) => {
+    const currentState = context.getState();
+    context.setState({
+        ...currentState,
+        noteEditorOpened: newEvent({ state: true }),
+    });
 });

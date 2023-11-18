@@ -102,6 +102,11 @@ export async function activate(context: vscode.ExtensionContext) {
 			await sharingManager.promptUserForPeer();
 		},
 
+		editBookmarkNote: async () => {
+			debug("Telling casfile view to switch note to edit mode");
+			await casefileView.openNoteEditor();
+		},
+
 	}).map(([name, handler]) => vscode.commands.registerCommand('codeCasefile.' + name, handler)));
 }
 

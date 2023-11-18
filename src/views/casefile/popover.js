@@ -14,8 +14,7 @@ export const usePopover = ({
     preferOnCrossAxis, // 'start' or 'end'
     modal,
     offset: offset_ = OFFSET,
-    open: controlledOpen,
-    onOpenChange: setControlledOpen,
+    open: [controlledOpen, setControlledOpen] = [],
 } = {}) => {
     const [uncontrolledOpen, setUncontrolledOpen] = useState(initialOpen);
     const [labelId, setLabelId] = useState();

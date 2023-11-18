@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import * as vscode from 'vscode';
 import { debug } from './debugLog';
-import { DELETE_BOOKMARK, MOVE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL } from './messageNames';
+import { DELETE_BOOKMARK, MOVE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL, SET_NOTES_DISPLAYING, UPDATE_NOTE } from './messageNames';
 import Services from './services';
 import { connectWebview, dispatchMessage, messageHandler } from './webviewHelper';
 import { cloneDeep, debounce, thru, update } from 'lodash';
@@ -108,8 +108,8 @@ export class CasefileView implements vscode.WebviewViewProvider {
         });
     }
 
-	deleteBookmark(itemPath: string[]): Promise<boolean> {
-		return this._modifyCasefileContent(async (casefile) => {
+    deleteBookmark(itemPath: string[]): Promise<boolean> {
+        return this._modifyCasefileContent(async (casefile) => {
             const bookmarkForest = casefile.bookmarks || [];
             const modPath = getMarkPath(bookmarkForest, itemPath);
             if (modPath.length === 0) {
@@ -140,9 +140,9 @@ export class CasefileView implements vscode.WebviewViewProvider {
             markList?.splice(delIndex, 1, ...substitutions);
             return true;
         });
-	}
+    }
 
-	async deleteAllBookmarks() {
+    async deleteAllBookmarks() {
         const choice = await vscode.window.showWarningMessage(
             "Delete all bookmarks from current casefile?",
             {
@@ -159,7 +159,11 @@ export class CasefileView implements vscode.WebviewViewProvider {
             delete casefile.path;
             return true;
         });
-	}
+    }
+
+    openNoteEditor() {
+        this._view?.webview.postMessage({ type: 'editNotes' });
+    }
 
     async importFromCurrentEditor() {
         const editor = vscode.window.activeTextEditor;
@@ -215,18 +219,18 @@ export class CasefileView implements vscode.WebviewViewProvider {
             );
         };
 
-		// Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
+        // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
         const scriptUri = viewUri('main.js');
 
-		// Do the same for the stylesheet.
+        // Do the same for the stylesheet.
         const styleResetUri = viewUri('reset.css', { common: true });
         const styleVSCodeUri = viewUri('vscode.css', { common: true });
         const styleMainUri = viewUri('main.css');
         const codiconsUri = viewUri('codicon.css', { module: ['@vscode/codicons', 'dist'] });
         const animateUri = viewUri('animate.min.css', { module: ['animate.css'] });
 
-		// Use a nonce to only allow a specific script to be run.
-		const nonce = getNonce();
+        // Use a nonce to only allow a specific script to be run.
+        const nonce = getNonce();
 
         // END SAMPLE CODE
 
@@ -421,6 +425,30 @@ export class CasefileView implements vscode.WebviewViewProvider {
             markList?.splice(delIndex, 1);
             return true;
         });
+    }
+
+    async [messageHandler(UPDATE_NOTE)](data: any): Promise<void> {
+        const { itemPath = [], content = '' } = data || {};
+        debug("Starting to update note content on %O", itemPath);
+        await this._modifyCasefileContent((casefile) => {
+            const bookmarkForest = casefile.bookmarks || [];
+            const modPath = getMarkPath(bookmarkForest, itemPath);
+            debug("Resolved itemPath %O to effective path %O", itemPath, modPath);
+            if (modPath.length === 0) {
+                return false;
+            }
+            const { mark } = modPath.pop() || {};
+            if (!mark) {
+                return false;
+            }
+            mark.notes = content;
+            return true;
+        });
+    }
+
+    async [messageHandler(SET_NOTES_DISPLAYING)](data: any): Promise<void> {
+        const { displaying } = data || {};
+        vscode.commands.executeCommand('setContext', 'codeCasefile.notesShowing', displaying);
     }
 
     addImportedBookmarks(importPath: string, importedBookmarks: Bookmark[]) {
