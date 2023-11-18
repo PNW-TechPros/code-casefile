@@ -66,6 +66,14 @@
     cursor: context-menu;
 }
 
+.show-bookmark-notes.missing:not([data-state="open"]) {
+    opacity: 0;
+}
+
+.bookmark:hover .show-bookmark-notes.missing {
+    opacity: 0.5;
+}
+
 .bookmark-notes-display {
     z-index: 30;
     background-color: var(--codecasefile-notes-background);

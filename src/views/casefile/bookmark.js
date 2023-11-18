@@ -145,21 +145,19 @@ const MarkInfo = ({ bookmark, ancestors = [], dragging, drag, folding, ps = {} }
     const updateNotes = () => {};
 
     const indicators = [];
-    $bookmark.notes.getting(bookmark, { then(notes) {
-        if (!notes) {return;}
-        decoration.popoverContent = <Popover.Content className="bookmark-notes-display">
-            <Popover.Description renderAs="div">
-                <BookmarkNotes
-                    itemPath={[...ancestors, bookmark.id]}
-                    content={notes} onContentChange={updateNotes}
-                    noteState={ps.activeNote}
-                />
-            </Popover.Description>
-        </Popover.Content>;
-        indicators.push(<Popover.Trigger asChild>
-            <i className="codicon codicon-note show-bookmark-notes" />
-        </Popover.Trigger>);
-    }});
+    const notes = $bookmark.notes.get(bookmark) || '';
+    decoration.popoverContent = <Popover.Content className="bookmark-notes-display">
+        <Popover.Description renderAs="div">
+            <BookmarkNotes
+                itemPath={[...ancestors, bookmark.id]}
+                content={notes} onContentChange={updateNotes}
+                noteState={ps.activeNote}
+            />
+        </Popover.Description>
+    </Popover.Content>;
+    indicators.push(<Popover.Trigger asChild>
+        <i className={`codicon codicon-note show-bookmark-notes ${notes ? '' : 'missing'}`} />
+    </Popover.Trigger>);
 
     let result = (<div
         className={`bookmark ${dragging ? 'dragging-bookmark' : ''}`}
