@@ -17,7 +17,6 @@ export const BookmarkNotes = ({ itemPath, content, noteState = {} }) => {
     }, []);
     const popoverContext = usePopoverContext();
 
-    console.info({ noteState, mountTime });
     if (content && !(noteState.editingStarted >= mountTime)) {
         const noteClicked = (event) => {
             // If not the second click of a double-click, ignore this
