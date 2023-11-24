@@ -142,10 +142,11 @@ export class CasefileView implements vscode.WebviewViewProvider {
             ...lineRef,
             markText,
         };
-        const peg = this._services.casefile.derivePeg(lineRef);
+        const peg = await this._services.casefile.derivePeg(lineRef);
         if (peg) {
             newBookmark.peg = peg;
         }
+        debug("Adding new bookmark: %O", newBookmark);
         this._modifyCasefileContent((casefile) => {
             if (!casefile.bookmarks) {
                 casefile.bookmarks = [];

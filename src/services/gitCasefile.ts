@@ -72,12 +72,13 @@ export default class GitCasefile {
 
     async derivePeg(ref: {file: string, line: number}): Promise<BookmarkPeg | undefined> {
         const possibilities: any[] = [];
-        await Promise.all(this.keepers.map((keeper) => {
-            const peg = keeper.bookmarks.computeLinePeg(ref.file, ref.line);
+        await Promise.all(this.keepers.map(async (keeper) => {
+            const peg = await keeper.bookmarks.computeLinePeg(ref.file, ref.line);
+            debug("Computed git peg: %O", peg);
             if (peg) {
                 possibilities.push(peg);
             }
         }));
-        return possibilities[0];
+        return possibilities.find(peg => peg?.commit);
     }
 }
