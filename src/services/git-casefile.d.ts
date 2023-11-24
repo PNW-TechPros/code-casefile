@@ -18,7 +18,8 @@ declare module 'git-casefile' {
     };
 
     class BookmarkFacilitator {
-        currentLocation(bookmark: Bookmark): any;
+        currentLocation(bookmark: Bookmark): Promise<any>;
+        computeLinePeg(filePath: string, line: number): Promise<BookmarkPeg | undefined>;
     }
 
     class GitInteraction {
@@ -30,4 +31,9 @@ declare module 'git-casefile' {
     }
 
     type Bookmark = any;
+
+    type BookmarkPeg = {
+        commit: string;
+        line: number | string;
+    };
 }

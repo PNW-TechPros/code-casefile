@@ -92,6 +92,12 @@
         "title": "Edit the bookmark note",
         "category": "Casefile",
         "icon": "${edit}"
+      },
+      {
+        "command": "codeCasefile.createBookmark",
+        "title": "Bookmark in casefile",
+        "category": "Casefile",
+        "icon": "${add}"
       }
     ],
     "menus": {
@@ -111,9 +117,18 @@
         {
           "command": "codeCasefile.importTextCasefile",
           "when": "codeCasefile.casefileInEditor"
+        },
+        {
+          "command": "codeCasefile.createBookmark",
+          "when": "editorHasSelection && resourceScheme == 'file'"
         }
       ],
       "editor/context": [
+        {
+          "command": "codeCasefile.createBookmark",
+          "group": "c_casefile",
+          "when": "editorHasSelection && resourceScheme == 'file'"
+        },
         {
           "command": "codeCasefile.importTextCasefile",
           "group": "c_casefile",

@@ -6,10 +6,7 @@ export type Bookmark = {
     line?: number;
     markText?: string;
     notes?: string;
-    peg?: {
-        commit: string;
-        line: number | string;
-    };
+    peg?: any;
     id?: string;
     collapsed?: boolean;
 };

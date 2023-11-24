@@ -16,7 +16,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		getConfig: () => vscode.workspace.getConfiguration("casefile"),
 		getWorkdirs: () => (
 			vscode.workspace.workspaceFolders?.flatMap(
-				f => f.uri.fsPath ? [f.uri.fsPath] : []
+				f => f.uri.scheme === 'file' ? [f.uri.fsPath] : []
 			)
 			|| []
 		),
@@ -56,6 +56,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	// of package.json (with a "codeCasefile." prefix):
 	subscribe(...Object.entries({
 
+		createBookmark: async () => {
+			debug("Creating bookmark from selection");
+			await casefileView.createBookmark();
+		},
+		
 		deleteAllBookmarks: () => {
 			casefileView.deleteAllBookmarks();
 		},
@@ -63,6 +68,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		deleteBookmark: ({ itemPath }: { itemPath: string[] }) => {
 			debug("deleteBookmark command executed: %o", itemPath);
 			casefileView.deleteBookmark(itemPath);
+		},
+
+		editBookmarkNote: async () => {
+			debug("Telling casfile view to switch note to edit mode");
+			await casefileView.openNoteEditor();
 		},
 
 		exportTextCasefile: async () => {
@@ -100,11 +110,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		selectSharingPeer: async () => {
 			debug("Asking user to select sharing peer");
 			await sharingManager.promptUserForPeer();
-		},
-
-		editBookmarkNote: async () => {
-			debug("Telling casfile view to switch note to edit mode");
-			await casefileView.openNoteEditor();
 		},
 
 	}).map(([name, handler]) => vscode.commands.registerCommand('codeCasefile.' + name, handler)));

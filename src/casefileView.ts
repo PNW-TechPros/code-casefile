@@ -108,6 +108,53 @@ export class CasefileView implements vscode.WebviewViewProvider {
         });
     }
 
+    async createBookmark() {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            await vscode.window.showErrorMessage("Casefile: Creating bookmark requires a text editor to be active");
+            return;
+        }
+        if (editor.selections.length === 0) {
+            await vscode.window.showErrorMessage("Casefile: Text must be selected for bookmark creation");
+            return;
+        } else if (editor.selections.length !== 1) {
+            await vscode.window.showErrorMessage("Casefile: Cannot create bookmark from multiple selections");
+            return;
+        }
+        if (editor.selection.end.line !== editor.selection.start.line) {
+            await vscode.window.showErrorMessage("Casefile: Bookmark text must be on a single line");
+            return;
+        }
+        const markText = editor.document.getText(editor.selection);
+        if (editor.document.uri.scheme !== 'file') {
+            await vscode.window.showErrorMessage("Casefile: Can only bookmark files in the local filesystem");
+            return;
+        }
+        const fullFilePath = editor.document.uri.fsPath;
+        const file = this._services.casefile.relativizeFilePath(fullFilePath);
+        if (!file) {
+            await vscode.window.showErrorMessage("Casefile: Selected file is not bookmarkable");
+            return;
+        }
+        const lineRef = { file, line: editor.selection.start.line };
+        const newBookmark: Bookmark = {
+            id: nextId(),
+            ...lineRef,
+            markText,
+        };
+        const peg = this._services.casefile.derivePeg(lineRef);
+        if (peg) {
+            newBookmark.peg = peg;
+        }
+        this._modifyCasefileContent((casefile) => {
+            if (!casefile.bookmarks) {
+                casefile.bookmarks = [];
+            }
+            casefile.bookmarks.push(newBookmark);
+            return true;
+        });
+    }
+
     deleteBookmark(itemPath: string[]): Promise<boolean> {
         return this._modifyCasefileContent(async (casefile) => {
             const bookmarkForest = casefile.bookmarks || [];
