@@ -20,6 +20,12 @@
       {
         "title": "Casefile",
         "properties": {
+          "casefile.useDefaultKeyboardShortcuts": {
+            "scope": "machine-overridable",
+            "type": "boolean",
+            "default": true,
+            "description": "Activate default Casefile keyboard shortcuts"
+          },
           "casefile.externalTools.path": {
             "scope": "machine",
             "type": "string",
@@ -92,6 +98,20 @@
         "title": "Edit the bookmark note",
         "category": "Casefile",
         "icon": "${edit}"
+      },
+      {
+        "command": "codeCasefile.createBookmark",
+        "title": "Bookmark in casefile",
+        "category": "Casefile",
+        "icon": "${add}"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "codeCasefile.createBookmark",
+        "key": "ctrl+shift+8",
+        "mac": "shift+cmd+8",
+        "when": "editorHasSelection && codeCasefile.usingDefaultKeybindings"
       }
     ],
     "menus": {
@@ -111,9 +131,18 @@
         {
           "command": "codeCasefile.importTextCasefile",
           "when": "codeCasefile.casefileInEditor"
+        },
+        {
+          "command": "codeCasefile.createBookmark",
+          "when": "editorHasSelection && resourceScheme == 'file'"
         }
       ],
       "editor/context": [
+        {
+          "command": "codeCasefile.createBookmark",
+          "group": "c_casefile",
+          "when": "editorHasSelection && resourceScheme == 'file'"
+        },
         {
           "command": "codeCasefile.importTextCasefile",
           "group": "c_casefile",

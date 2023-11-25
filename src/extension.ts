@@ -4,9 +4,11 @@ import Services, { Persistence } from './services';
 import { debug } from './debugLog';
 import { CasefileInstanceIdentifier, SharedCasefilesViewManager } from './sharedCasefilesView';
 import { fillMissingIds } from './Bookmark';
+import { setContext } from './vscodeUtils';
 
 const CASEFILE_PERSISTENCE_PROPERTY = 'casefile';
 const SHARING_PERSISTENCE_PROPERTY = 'sharing';
+const DEFAULT_KEYBINDINGS_SETTING = 'useDefaultKeyboardShortcuts';
 
 // Called by VS Code when this extension is activated
 export async function activate(context: vscode.ExtensionContext) {
@@ -16,7 +18,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		getConfig: () => vscode.workspace.getConfiguration("casefile"),
 		getWorkdirs: () => (
 			vscode.workspace.workspaceFolders?.flatMap(
-				f => f.uri.fsPath ? [f.uri.fsPath] : []
+				f => f.uri.scheme === 'file' ? [f.uri.fsPath] : []
 			)
 			|| []
 		),
@@ -25,10 +27,20 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 	subscribe(services);
 
+	const updateKeybindingsContext = () => {
+		const config = vscode.workspace.getConfiguration('casefile');
+		const settingValue = config.get<boolean>(DEFAULT_KEYBINDINGS_SETTING);
+		setContext('usingDefaultKeybindings', settingValue);
+	};
+	updateKeybindingsContext();
+
 	// Bind environmental events to *services*
 	subscribe(vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('casefile.externalTools')) {
 			services.casefile.configurationChanged();
+		}
+		if (e.affectsConfiguration(`casefile.${DEFAULT_KEYBINDINGS_SETTING}`)) {
+			updateKeybindingsContext();
 		}
 	}));
 	subscribe(vscode.workspace.onDidChangeWorkspaceFolders(e => {
@@ -56,6 +68,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	// of package.json (with a "codeCasefile." prefix):
 	subscribe(...Object.entries({
 
+		createBookmark: async () => {
+			debug("Creating bookmark from selection");
+			await casefileView.createBookmark();
+		},
+		
 		deleteAllBookmarks: () => {
 			casefileView.deleteAllBookmarks();
 		},
@@ -63,6 +80,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		deleteBookmark: ({ itemPath }: { itemPath: string[] }) => {
 			debug("deleteBookmark command executed: %o", itemPath);
 			casefileView.deleteBookmark(itemPath);
+		},
+
+		editBookmarkNote: async () => {
+			debug("Telling casfile view to switch note to edit mode");
+			await casefileView.openNoteEditor();
 		},
 
 		exportTextCasefile: async () => {
@@ -100,11 +122,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		selectSharingPeer: async () => {
 			debug("Asking user to select sharing peer");
 			await sharingManager.promptUserForPeer();
-		},
-
-		editBookmarkNote: async () => {
-			debug("Telling casfile view to switch note to edit mode");
-			await casefileView.openNoteEditor();
 		},
 
 	}).map(([name, handler]) => vscode.commands.registerCommand('codeCasefile.' + name, handler)));
