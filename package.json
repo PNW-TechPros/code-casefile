@@ -20,6 +20,12 @@
       {
         "title": "Casefile",
         "properties": {
+          "casefile.useDefaultKeyboardShortcuts": {
+            "scope": "machine-overridable",
+            "type": "boolean",
+            "default": true,
+            "description": "Activate default Casefile keyboard shortcuts"
+          },
           "casefile.externalTools.path": {
             "scope": "machine",
             "type": "string",
@@ -98,6 +104,14 @@
         "title": "Bookmark in casefile",
         "category": "Casefile",
         "icon": "${add}"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "codeCasefile.createBookmark",
+        "key": "ctrl+shift+8",
+        "mac": "shift+cmd+8",
+        "when": "editorHasSelection && codeCasefile.usingDefaultKeybindings"
       }
     ],
     "menus": {

@@ -4,9 +4,11 @@ import Services, { Persistence } from './services';
 import { debug } from './debugLog';
 import { CasefileInstanceIdentifier, SharedCasefilesViewManager } from './sharedCasefilesView';
 import { fillMissingIds } from './Bookmark';
+import { setContext } from './vscodeUtils';
 
 const CASEFILE_PERSISTENCE_PROPERTY = 'casefile';
 const SHARING_PERSISTENCE_PROPERTY = 'sharing';
+const DEFAULT_KEYBINDINGS_SETTING = 'useDefaultKeyboardShortcuts';
 
 // Called by VS Code when this extension is activated
 export async function activate(context: vscode.ExtensionContext) {
@@ -25,10 +27,20 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 	subscribe(services);
 
+	const updateKeybindingsContext = () => {
+		const config = vscode.workspace.getConfiguration('casefile');
+		const settingValue = config.get<boolean>(DEFAULT_KEYBINDINGS_SETTING);
+		setContext('usingDefaultKeybindings', settingValue);
+	};
+	updateKeybindingsContext();
+
 	// Bind environmental events to *services*
 	subscribe(vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('casefile.externalTools')) {
 			services.casefile.configurationChanged();
+		}
+		if (e.affectsConfiguration(`casefile.${DEFAULT_KEYBINDINGS_SETTING}`)) {
+			updateKeybindingsContext();
 		}
 	}));
 	subscribe(vscode.workspace.onDidChangeWorkspaceFolders(e => {
