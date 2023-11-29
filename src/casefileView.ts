@@ -375,7 +375,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
             return false;
         }
         for (const folder of vscode.workspace.workspaceFolders || []) {
-            debug("...folder %s", folder.uri);
+            debug("...checking folder %s", folder.uri.toString());
             const bookmarkTargetUri = vscode.Uri.joinPath(folder.uri, bookmark.file);
             const fileContent = await vscode.workspace.fs.readFile(
                 bookmarkTargetUri
