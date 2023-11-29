@@ -4,7 +4,7 @@ import { debug } from './debugLog';
 import { DELETE_BOOKMARK, MOVE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL, SET_NOTES_DISPLAYING, UPDATE_NOTE } from './messageNames';
 import Services from './services';
 import { connectWebview, dispatchMessage, messageHandler } from './webviewHelper';
-import { cloneDeep, debounce, thru, update } from 'lodash';
+import { debounce, thru } from 'lodash';
 import path = require('path');
 import type { Bookmark } from './Bookmark';
 import type { Casefile } from './Casefile';
@@ -370,6 +370,51 @@ export class CasefileView implements vscode.WebviewViewProvider {
         setContext(CASEFILE_IN_EDITOR_CONTEXT_KEY, casefilePresent);
     }
 
+    private async _openBestMatch(bookmark: Bookmark): Promise<boolean> {
+        if (!bookmark.file || !bookmark.markText) {
+            return false;
+        }
+        for (const folder of vscode.workspace.workspaceFolders || []) {
+            debug("...checking folder %s", folder.uri.toString());
+            const bookmarkTargetUri = vscode.Uri.joinPath(folder.uri, bookmark.file);
+            const fileContent = await vscode.workspace.fs.readFile(
+                bookmarkTargetUri
+            )
+            .then(r => Buffer.from(r).toString('utf8'))
+            .then(r => r, () => null);
+            if (!fileContent) {
+                debug("...content cannot be read, at least not as UTF-8");
+                continue;
+            }
+            // TODO: Improve this algorithm -- currently just finds the first
+            // instance of bookmark.markText in the file
+            const index = fileContent.indexOf(bookmark.markText);
+            if (index >= 0) {
+                const document = await vscode.workspace.openTextDocument(bookmarkTargetUri);
+                const lineNumber = fileContent.slice(0, index).split(/\r\n?|\n/).length;
+                const line = document.lineAt(lineNumber - 1);
+                // TODO: Determination of selStart and selEnd would ideally normalize whitespace
+                // spans to single space, but back-mapping is more complicated than MVP
+                const selStart = line.text.indexOf(bookmark.markText);
+                const selEnd = selStart >= 0 ? selStart + bookmark.markText.length : 0;
+                await this._revealText(document, line.lineNumber, [selStart, selEnd]);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private async _revealText(document: vscode.TextDocument, lineNum: number, [selStart, selEnd]: [number, number]) {
+        await vscode.window.showTextDocument(document, {
+            preserveFocus: false,
+            preview: true,
+            selection: new vscode.Range(
+                new vscode.Position(lineNum, Math.max(0, selStart)),
+                new vscode.Position(lineNum, selEnd)
+            ),
+        });
+    }
+
     async [messageHandler(REQUEST_INITIAL_FILL)](data: any): Promise<void> {
         const content = this._services.getCurrentForest();
         await this._setCasefileContent(content, {
@@ -392,10 +437,30 @@ export class CasefileView implements vscode.WebviewViewProvider {
                         // continue to next keeper
                     }
                 }
-                throw new Error(`Bookmark not found in any workspace folder`);
+                return {};
             }
         );
-        debug("...bookmark located: %O", targetLocation);
+        if (targetLocation.baseDir) {
+            debug("...bookmark located: %O", targetLocation);
+        } else if (bookmark.file) {
+            debug("...bookmark not located through git-casefile, searching workspace folders");
+            if (await this._openBestMatch(bookmark)) {
+                return;
+            }
+        }
+        
+        if (thru(targetLocation, ({ baseDir, file, line }) => {
+            if (!line) {
+                return 'no line target';
+            }
+            const canConstructFilePath = baseDir && file;
+            if (!canConstructFilePath) {
+                return 'no file target';
+            }
+        })) {
+            await vscode.window.showErrorMessage(`Unable to find file "${bookmark.file}" with matching text in workspace folders`);
+            return;
+        }
 
         const filePath = path.join(targetLocation.baseDir, targetLocation.file);
         const document = await vscode.workspace.openTextDocument(filePath);
@@ -404,14 +469,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
         // spans to single space, but back-mapping is more complicated than MVP
         const selStart = line.text.indexOf(bookmark.markText);
         const selEnd = selStart >= 0 ? selStart + bookmark.markText.length : 0;
-        await vscode.window.showTextDocument(document, {
-            preserveFocus: false,
-            preview: true,
-            selection: new vscode.Range(
-                new vscode.Position(line.lineNumber, Math.max(0, selStart)),
-                new vscode.Position(line.lineNumber, selEnd)
-            ),
-        });
+        await this._revealText(document, line.lineNumber, [selStart, selEnd]);
     }
 
     async [messageHandler(MOVE_BOOKMARK)](data: any): Promise<void> {
