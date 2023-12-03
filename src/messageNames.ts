@@ -1,4 +1,5 @@
 export const DELETE_BOOKMARK = 'deleteBookmark';
+export const EDIT_CASEFILE_NAME = 'editCasefileName';
 export const MOVE_BOOKMARK = 'moveBookmark';
 export const OPEN_BOOKMARK = 'openBookmark';
 export const REQUEST_INITIAL_FILL = 'requestInitialFill';

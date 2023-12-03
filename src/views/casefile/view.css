@@ -2,6 +2,31 @@
     --codecasefile-notes-foreground: #d9d9d9;
     --codecasefile-notes-background: #000000;
     --codecasefile-notes-button-hover: #3a3a3a;
+    --codecasefile-name-background: var(--vscode-list-inactiveSelectionBackground);
+}
+
+.casefile-name {
+    font-size: 1.5em;
+    font-style: italic;
+    font-weight: lighter;
+    background-color: var(--codecasefile-name-background);
+    margin-left: -1em;
+    padding-left: 1em;
+    display: grid;
+    grid-template-columns: [content-start] auto [content-end buttons-start] max-content [buttons-end]
+}
+
+.casefile-name span.value {
+    grid-column: content;
+    font-weight: bold;
+    font-style: normal;
+}
+
+.casefile-name .buttons {
+    grid-column: buttons;
+}
+.casefile-name .buttons .button:hover {
+    background-color: var(--vscode-sideBar-background);
 }
 
 .line-ref {
