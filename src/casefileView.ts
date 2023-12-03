@@ -249,6 +249,22 @@ export class CasefileView implements vscode.WebviewViewProvider {
         await vscode.window.showTextDocument(document);
     }
 
+    async editCasefileName(): Promise<void> {
+        const { path } = this._getCasefileContent();
+        const casefileName = path?.replace(/\/[^/]*$/, '');
+        const newName = await vscode.window.showInputBox({
+            title: "Casefile Name",
+            value: casefileName,
+        });
+        if (newName === undefined) {
+            return;
+        }
+        await this._modifyCasefileContent((casefile) => {
+            casefile.path = newName ? newName + '/' + randomUUID() : undefined;
+            return true;
+        });
+    }
+
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
         // BEGIN SAMPLE CODE from https://github.com/microsoft/vscode-extension-samples/blob/2f83557a56c37a5e48943ea0201e1729708690b6/webview-view-sample/src/extension.ts
 
@@ -558,19 +574,7 @@ export class CasefileView implements vscode.WebviewViewProvider {
     }
 
     async [messageHandler(EDIT_CASEFILE_NAME)](data: any): Promise<void> {
-        const { path } = this._getCasefileContent();
-        const casefileName = path?.replace(/\/[^/]*$/, '');
-        const newName = await vscode.window.showInputBox({
-            title: "Casefile Name",
-            value: casefileName,
-        });
-        if (!newName) {
-            return;
-        }
-        await this._modifyCasefileContent((casefile) => {
-            casefile.path = newName + '/' + randomUUID();
-            return true;
-        });
+        return this.editCasefileName();
     }
 
     addImportedBookmarks(importPath: string, importedBookmarks: Bookmark[]) {

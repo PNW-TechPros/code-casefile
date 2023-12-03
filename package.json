@@ -115,6 +115,12 @@
         "category": "Casefile",
         "icon": "$(casefile-share)",
         "enablement": "codeCasefile.peerEstablished"
+      },
+      {
+        "command": "codeCasefile.editCasefileName",
+        "title": "Edit name of current casefile",
+        "category": "Casefile",
+        "icon": "$(edit)"
       }
     ],
     "keybindings": [
@@ -175,10 +181,17 @@
         },
         {
           "command": "codeCasefile.deleteAllBookmarks",
+          "group": "1_bookmarks",
+          "when": "view == 'codeCasefile.casefileView'"
+        },
+        {
+          "command": "codeCasefile.editCasefileName",
+          "group": "6_casefile",
           "when": "view == 'codeCasefile.casefileView'"
         },
         {
           "command": "codeCasefile.exportTextCasefile",
+          "group": "6_casefile",
           "when": "view == 'codeCasefile.casefileView'"
         },
         {
