@@ -124,6 +124,10 @@ export async function activate(context: vscode.ExtensionContext) {
 			await sharingManager.promptUserForPeer();
 		},
 
+		shareToPeer: async () => {
+			await sharingManager.shareCurrentCasefile();
+		},
+
 	}).map(([name, handler]) => vscode.commands.registerCommand('codeCasefile.' + name, handler)));
 }
 

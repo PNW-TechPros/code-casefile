@@ -8,10 +8,13 @@ import { CasefileSharingState } from './CasefileSharingState';
 import { CasefileGroup, CasefileKeeper } from 'git-casefile';
 import { deiconed, setContext } from './vscodeUtils';
 import { Bookmark } from './Bookmark';
+import { randomUUID } from 'crypto';
 
 const PICK_PAYLOAD = Symbol('payload');
 const treeItemSharedCasefiles = new WeakMap<TreeItem, string>();
 const IMPORTABLE_CASEFILE = 'importableCasefileInstance';
+const PUSH_ADDITIONAL_HISTORY = "Include missing history";
+const SHARE_WITHOUT_HISTORY = "Share only the casefile";
 
 interface TreeItemSource {
     renderTreeItem(): TreeItem;
@@ -359,7 +362,7 @@ export class SharedCasefilesViewManager {
 
         // Call fetchSharedCasefilesFromRemote() on that keeper with the
         // remote name:
-        await keeper.gitOps.fetchSharedCasefilesFromRemote(peer.remote);
+        await keeper.remote(peer.remote).fetchSharedCasefiles();
 
         // Call getListOfCasefiles() on that keeper and store the
         // result as *knownCasefiles* in the sharing state (i.e. this._services.setSharingState(...))
@@ -457,6 +460,71 @@ export class SharedCasefilesViewManager {
         instance.authors = authors;
     }
 
+    async shareCurrentCasefile(): Promise<void> {
+        const { peer } = this;
+        if (!peer) {
+            await vscode.window.showErrorMessage("Casefile: Cannot share until sharing peer is established");
+            return;
+        }
+        const remote = this._services.casefile.getRemote(peer);
+        const casefile = {...this._services.getCurrentForest()};
+        const { path: casefilePath } = casefile;
+        if (!casefilePath) {
+            const casefileName = await this._promptForSharedCasefileName();
+            if (!casefileName) {
+                return;
+            }
+            casefile.path = casefileName + '/' + randomUUID();
+            this._services.setCurrentForest(casefile);
+        } else {
+            const casefileName = casefilePath.replace(/\/[^\/]*$/, '');
+            const updating = Boolean(
+                (this._sharingState.knownCasefiles || [])
+                .find((group) => group.name === casefileName)
+                ?.instances
+                ?.find(({ path }) => path === casefile.path)
+            );
+            const ok = await vscode.window.showInformationMessage(
+                "Share Current Casefile?",
+                {
+                    modal: true,
+                    detail: (
+                        `Share bookmarks in the current casefile as "${casefileName}" to "${peer.remote}" of ${peer.folder}?`
+                        + (
+                            updating
+                            ? "\n\n This will update the casefile definition that was loaded."
+                            : ''
+                        )
+                    ),
+                },
+                "OK"
+            );
+            if (!ok) {
+                return;
+            }
+        }
+        const unsharedCommits = await remote.commitsUnknown(casefile);
+        if (unsharedCommits) {
+            const userOpt = await vscode.window.showWarningMessage(
+                "",
+                {
+                    modal: true,
+                    detail: `The '${peer.remote}' remote of '${peer.folder}' is missing knowledge of at least one referenced commit.`
+                },
+                PUSH_ADDITIONAL_HISTORY,
+                SHARE_WITHOUT_HISTORY
+            );
+            switch (userOpt) {
+                case undefined:
+                    return;
+                case PUSH_ADDITIONAL_HISTORY:
+                    await remote.pushCommitRefs(...unsharedCommits);
+                    break;
+            }
+        }
+        await remote.share(casefile);
+    }
+
     private _getCurrentKeeper(options: {
         folder: string,
     }): CasefileKeeper | undefined {
@@ -475,6 +543,36 @@ export class SharedCasefilesViewManager {
             return;
         }
         return keeper;
+    }
+
+    private async _promptForSharedCasefileName(): Promise<string | undefined> {
+        return vscode.window.showInputBox({
+            title: "Casefile Name",
+            prompt: "Name to give to the set of bookmarks in the current casefile",
+            validateInput: (value: string): (vscode.InputBoxValidationMessage | undefined) => {
+                if (value.includes('/')) {
+                    return {
+                        message: "Name cannot contain slash (/) characters.",
+                        severity: vscode.InputBoxValidationSeverity.Error,
+                    };
+                }
+                const existingGroup = (this._sharingState.knownCasefiles || []).find(
+                    (group) => group.name === value
+                );
+                if (existingGroup) {
+                    const fileCount = existingGroup.instances.length;
+                    const groupDesc = (
+                        fileCount === 1
+                        ? "an existing, shared casefile"
+                        : `${fileCount} existing, shared casefiles`
+                    );
+                    return {
+                        message: `"${value}" is the name of ${groupDesc}`,
+                        severity: vscode.InputBoxValidationSeverity.Warning,
+                    };
+                }
+            },
+        });
     }
 }
 

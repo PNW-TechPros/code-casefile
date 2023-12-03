@@ -1,4 +1,4 @@
-import { BookmarkPeg, CasefileKeeper } from "git-casefile";
+import { BookmarkPeg, CasefileKeeper, GitRemote } from "git-casefile";
 import { WorkspaceConfiguration } from "vscode";
 import { Integration as EditorIntegration } from "./editorIntegration";
 import { sortBy, tap } from "lodash";
@@ -80,5 +80,14 @@ export default class GitCasefile {
             }
         }));
         return possibilities.find(peg => peg?.commit);
+    }
+
+    getRemote(ref: {folder: string, remote: string}): GitRemote {
+        for (const keeper of this.keepers) {
+            if (keeper.workingDir === ref.folder) {
+                return keeper.remote(ref.remote);
+            }
+        }
+        throw new Error(`No CasefileKeeper for folder '${ref.folder}`);
     }
 }
