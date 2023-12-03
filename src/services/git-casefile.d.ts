@@ -4,6 +4,7 @@ declare module 'git-casefile' {
         bookmarks: BookmarkFacilitator;
         gitOps: GitInteraction;
         workingDir?: string;
+        remote(name: string): GitRemote;
     }
 
     type ToolOptions = {
@@ -28,6 +29,13 @@ declare module 'git-casefile' {
         getCasefileAuthors(path: string): Promise<{path: string, authors: string[]}>;
         getListOfCasefiles(): Promise<CasefileGroup[]>;
         getListOfRemotes(): Promise<string[]>;
+    }
+
+    class GitRemote {
+        commitsUnknown(casefile: any): Promise<string[] | false>;
+        fetchSharedCasefiles(): Promise<null>;
+        pushCommitRefs(...commits: string[]): Promise<null>;
+        share(casefile: any): Promise<{ message: string, commit: string}>;
     }
 
     type Bookmark = any;

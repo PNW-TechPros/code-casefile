@@ -11,12 +11,30 @@ import "./view.css";
 import { MessagePasser, messagePoster } from './messageSending';
 import { DRAG_TYPES } from './constants';
 import { vscontext, NO_STD_CMENU_ENTRIES, when } from '../helpers';
-import { DELETE_BOOKMARK, REQUEST_INITIAL_FILL, UPDATE_NOTE } from '../../messageNames';
+import { DELETE_BOOKMARK, EDIT_CASEFILE_NAME, REQUEST_INITIAL_FILL, UPDATE_NOTE } from '../../messageNames';
 import getMarkPath from './getMarkPath';
 import { eventTime, newEvent, projectEventStream } from '../eventStream';
 import { thru } from 'lodash';
 
 const vscode = acquireVsCodeApi();
+
+const CasefileName = ({ state: { path } }) => {
+    if (!path) {
+        return null;
+    }
+    const casefileName = path.replace(/\/[^/]*$/, '');
+    const editCasefileName = messagePoster(EDIT_CASEFILE_NAME);
+    const onEditClicked = () => { editCasefileName({}); };
+    console.log({ "Rendering CasefileName": casefileName });
+    return <div className="casefile-name">
+        <span className="value">{casefileName}</span>
+        <span className="buttons">
+            <i className="codicon codicon-edit button edit-button"
+                onClick={onEditClicked}
+            />
+        </span>
+    </div>;
+};
 
 const BindMessageHandling = ({ stateManagement }) => {
     useEffect(applicationOfMessagesToState(...stateManagement), [ ...stateManagement ]);
@@ -204,6 +222,7 @@ const View = () => {
             <RequestInitialData>
                 <BindMessageHandling {...{ stateManagement }} />
             </RequestInitialData>
+            <CasefileName {...{ state }}/>
             <DndProvider backend={HTML5Backend}>
                 <Bookmarks {...{ state }}/>
             </DndProvider>

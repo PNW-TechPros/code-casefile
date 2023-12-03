@@ -1,7 +1,7 @@
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import * as vscode from 'vscode';
 import { debug } from './debugLog';
-import { DELETE_BOOKMARK, MOVE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL, SET_NOTES_DISPLAYING, UPDATE_NOTE } from './messageNames';
+import { DELETE_BOOKMARK, EDIT_CASEFILE_NAME, MOVE_BOOKMARK, OPEN_BOOKMARK, REQUEST_INITIAL_FILL, SET_NOTES_DISPLAYING, UPDATE_NOTE } from './messageNames';
 import Services from './services';
 import { connectWebview, dispatchMessage, messageHandler } from './webviewHelper';
 import { debounce, thru } from 'lodash';
@@ -247,6 +247,22 @@ export class CasefileView implements vscode.WebviewViewProvider {
             content: makePersisted(casefile),
         });
         await vscode.window.showTextDocument(document);
+    }
+
+    async editCasefileName(): Promise<void> {
+        const { path } = this._getCasefileContent();
+        const casefileName = path?.replace(/\/[^/]*$/, '');
+        const newName = await vscode.window.showInputBox({
+            title: "Casefile Name",
+            value: casefileName,
+        });
+        if (newName === undefined) {
+            return;
+        }
+        await this._modifyCasefileContent((casefile) => {
+            casefile.path = newName ? newName + '/' + randomUUID() : undefined;
+            return true;
+        });
     }
 
     private async _getHtmlForWebview(webview: vscode.Webview): Promise<string> {
@@ -555,6 +571,10 @@ export class CasefileView implements vscode.WebviewViewProvider {
     async [messageHandler(SET_NOTES_DISPLAYING)](data: any): Promise<void> {
         const { displaying } = data || {};
         vscode.commands.executeCommand('setContext', 'codeCasefile.notesShowing', displaying);
+    }
+
+    async [messageHandler(EDIT_CASEFILE_NAME)](data: any): Promise<void> {
+        return this.editCasefileName();
     }
 
     addImportedBookmarks(importPath: string, importedBookmarks: Bookmark[]) {

@@ -87,6 +87,11 @@ export async function activate(context: vscode.ExtensionContext) {
 			await casefileView.openNoteEditor();
 		},
 
+		editCasefileName: async () => {
+			debug("Starting casefile name edit");
+			await casefileView.editCasefileName();
+		},
+
 		exportTextCasefile: async () => {
 			debug("Exporting casefile to text");
 			casefileView.exportToNewEditor();
@@ -122,6 +127,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		selectSharingPeer: async () => {
 			debug("Asking user to select sharing peer");
 			await sharingManager.promptUserForPeer();
+		},
+
+		shareToPeer: async () => {
+			await sharingManager.shareCurrentCasefile();
 		},
 
 	}).map(([name, handler]) => vscode.commands.registerCommand('codeCasefile.' + name, handler)));

@@ -51,6 +51,10 @@
       "casefile-import-shared": {
         "description": "Import of shared casefile into current casefile",
         "default": "repo-pull"
+      },
+      "casefile-share":{
+        "description": "Export of current casefile to selected peer",
+        "default": "repo-push"
       }
     },
     "commands": [
@@ -104,6 +108,19 @@
         "title": "Bookmark in casefile",
         "category": "Casefile",
         "icon": "${add}"
+      },
+      {
+        "command": "codeCasefile.shareToPeer",
+        "title": "Share current casefile to selected peer",
+        "category": "Casefile",
+        "icon": "$(casefile-share)",
+        "enablement": "codeCasefile.peerEstablished"
+      },
+      {
+        "command": "codeCasefile.editCasefileName",
+        "title": "Edit name of current casefile",
+        "category": "Casefile",
+        "icon": "$(edit)"
       }
     ],
     "keybindings": [
@@ -158,11 +175,23 @@
       ],
       "view/title": [
         {
+          "command": "codeCasefile.shareToPeer",
+          "group": "navigation",
+          "when": "view == 'codeCasefile.casefileView'"
+        },
+        {
           "command": "codeCasefile.deleteAllBookmarks",
+          "group": "1_bookmarks",
+          "when": "view == 'codeCasefile.casefileView'"
+        },
+        {
+          "command": "codeCasefile.editCasefileName",
+          "group": "6_casefile",
           "when": "view == 'codeCasefile.casefileView'"
         },
         {
           "command": "codeCasefile.exportTextCasefile",
+          "group": "6_casefile",
           "when": "view == 'codeCasefile.casefileView'"
         },
         {
