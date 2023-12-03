@@ -506,7 +506,7 @@ export class SharedCasefilesViewManager {
         const unsharedCommits = await remote.commitsUnknown(casefile);
         if (unsharedCommits) {
             const userOpt = await vscode.window.showWarningMessage(
-                "",
+                "Unshared History",
                 {
                     modal: true,
                     detail: `The '${peer.remote}' remote of '${peer.folder}' is missing knowledge of at least one referenced commit.`
