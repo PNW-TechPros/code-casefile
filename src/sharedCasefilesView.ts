@@ -522,7 +522,23 @@ export class SharedCasefilesViewManager {
                     break;
             }
         }
-        await remote.share(casefile);
+        try {
+            await remote.share(casefile);
+        } catch (error) {
+            console.error(error);
+            if (this.peer) {
+                const FETCH = `Fetch casefile list from ${this.peer?.remote}`;
+                const response = await vscode.window.showErrorMessage(
+                    "Failed to share casefile; local casefile list may be out-of-date.",
+                    FETCH
+                );
+                switch (response) {
+                    case FETCH:
+                        await this.fetchFromCurrentPeer();
+                }
+            }
+            return;
+        }
         const patchedList = await this._modifySharingState((state) => {
             const [, casefileGroupName] = casefile.path?.match(/^(.+)\/[^/]+$/) || [];
             if (!casefile.path || !casefileGroupName) {
