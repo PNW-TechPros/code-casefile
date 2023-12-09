@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { CancellationToken, Command, Disposable, EventEmitter, ProviderResult, TreeDataProvider, TreeItem, TreeItemCollapsibleState as FoldState } from "vscode";
 import Services from "./services";
 import { debug } from './debugLog';
-import { cloneDeep, tap, thru } from 'lodash';
+import { cloneDeep, remove, tap, thru } from 'lodash';
 import { basename, dirname } from 'path';
 import { CasefileSharingState } from './CasefileSharingState';
 import { CasefileGroup, CasefileKeeper } from 'git-casefile';
@@ -527,15 +527,7 @@ export class SharedCasefilesViewManager {
         } catch (error) {
             console.error(error);
             if (this.peer) {
-                const FETCH = `Fetch casefile list from ${this.peer?.remote}`;
-                const response = await vscode.window.showErrorMessage(
-                    "Failed to share casefile; local casefile list may be out-of-date.",
-                    FETCH
-                );
-                switch (response) {
-                    case FETCH:
-                        await this.fetchFromCurrentPeer();
-                }
+                await this._offerFetchForError("share casefile");
             }
             return;
         }
@@ -563,6 +555,71 @@ export class SharedCasefilesViewManager {
             debug("Failed to patch sharing state!");
             await this.fetchFromCurrentPeer();
         }
+    }
+
+    private async _offerFetchForError(opDesc: string) {
+        const FETCH = `Fetch casefile list from ${this.peer?.remote}`;
+        const response = await vscode.window.showErrorMessage(
+            `Failed to ${opDesc}; local casefile list may be out-of-date.`,
+            FETCH
+        );
+        switch (response) {
+            case FETCH:
+                await this.fetchFromCurrentPeer();
+                break;
+        }
+    }
+
+    async deleteCasefile(casefileInstancePath: string): Promise<null> {
+        const casefileName = casefileInstancePath.replace(/\/[^/]*$/, '');
+        const ok = await vscode.window.showWarningMessage(
+            `Delete the selected "${casefileName}" casefile?`,
+            {
+                modal: true,
+            },
+            "OK"
+        );
+        if (!ok) {
+            return null;
+        }
+        const peer = this.peer;
+        if (!peer) {
+            throw new Error("code-casefile: No peer selected");
+        }
+        const keeper = this._getCurrentKeeper(peer);
+        if (!keeper) {
+            throw new Error("code-casefile: No casefile keeper for peer");
+        }
+        try {
+            await keeper.remote(peer.remote).delete(casefileInstancePath);
+        } catch (error) {
+            console.error(error);
+            await this._offerFetchForError(`delete "${casefileName}"`);
+            return null;
+        }
+        const patchedList = await this._modifySharingState((state) => {
+            const [, casefileGroupName] = casefileInstancePath?.match(/^(.+)\/[^/]+$/) || [];
+            if (!casefileGroupName) {
+                return false;
+            }
+            const casefileGroup = state.knownCasefiles?.find(cf => cf.name === casefileGroupName);
+            if (!casefileGroup) {
+                return false;
+            }
+            const removed = remove(
+                casefileGroup.instances,
+                ({ path }) => path === casefileInstancePath
+            ).length !== 0;
+            if (removed && casefileGroup.instances.length === 0) {
+                remove(state.knownCasefiles || [], item => item === casefileGroup);
+            }
+            return removed;
+        });
+        if (!patchedList) {
+            debug("Failed to patch sharing state!");
+            await this.fetchFromCurrentPeer();
+        }
+        return null;
     }
 
     private _getCurrentKeeper(options: {

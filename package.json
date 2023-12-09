@@ -121,6 +121,12 @@
         "title": "Edit name of current casefile",
         "category": "Casefile",
         "icon": "$(edit)"
+      },
+      {
+        "command": "codeCasefile.deleteSharedCasefile",
+        "title": "Delete this casefile",
+        "category": "Casefile",
+        "icon": "$(remove)"
       }
     ],
     "keybindings": [
@@ -170,6 +176,10 @@
         {
           "command": "codeCasefile.importSharedCasefile",
           "group": "inline",
+          "when": "viewItem == 'importableCasefileInstance'"
+        },
+        {
+          "command": "codeCasefile.deleteSharedCasefile",
           "when": "viewItem == 'importableCasefileInstance'"
         }
       ],
