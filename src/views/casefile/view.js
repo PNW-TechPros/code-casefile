@@ -25,7 +25,6 @@ const CasefileName = ({ state: { path } }) => {
     const casefileName = path.replace(/\/[^/]*$/, '');
     const editCasefileName = messagePoster(EDIT_CASEFILE_NAME);
     const onEditClicked = () => { editCasefileName({}); };
-    console.log({ "Rendering CasefileName": casefileName });
     return <div className="casefile-name">
         <span className="value">{casefileName}</span>
         <span className="buttons">

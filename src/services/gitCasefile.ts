@@ -5,6 +5,7 @@ import { sortBy, tap } from "lodash";
 import * as path from "path";
 import { debug } from "../debugLog";
 import { statSync } from "fs";
+import EventEmitter = require("events");
 
 const { CasefileKeeper: CasefileKeeperImpl } = require('git-casefile');
 
@@ -46,9 +47,17 @@ export default class GitCasefile {
                 if (!statSync(gitDir, { throwIfNoEntry: false })) {
                     continue;
                 }
+                const tracer = new EventEmitter().on('execute', (program, args, opts) => {
+                    debug(
+                        "----- Executing (%s) -----\n> %s %s\n    (opts: %O)\n",
+                        workDir,
+                        program, args.map(JSON.stringify).join(' '),
+                        opts
+                    );
+                });
                 const gitKeeper = Object.assign(
                     new CasefileKeeperImpl({
-                        toolOptions: {...toolOptions, cwd: workDir},
+                        toolOptions: {...toolOptions, cwd: workDir, tracer},
                         editor: new EditorIntegration({ cwd: workDir }),
                     }), {
                         workingDir: workDir,

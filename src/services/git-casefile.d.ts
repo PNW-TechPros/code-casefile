@@ -33,6 +33,7 @@ declare module 'git-casefile' {
 
     class GitRemote {
         commitsUnknown(casefile: any): Promise<string[] | false>;
+        delete(...casefiles: [string | { path: string }]): Promise<null>;
         fetchSharedCasefiles(): Promise<null>;
         pushCommitRefs(...commits: string[]): Promise<null>;
         share(casefile: any): Promise<{ message: string, commit: string}>;

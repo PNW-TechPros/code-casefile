@@ -82,6 +82,15 @@ export async function activate(context: vscode.ExtensionContext) {
 			casefileView.deleteBookmark(itemPath);
 		},
 
+		deleteSharedCasefile: async (item: CasefileInstanceIdentifier | void) => {
+			const casefilePath = item?.sharedCasefilePath;
+			if (!casefilePath) {
+				await vscode.window.showErrorMessage("A casefile must be specified for deletion");
+				return;
+			}
+			await sharingManager.deleteCasefile(casefilePath);
+		},
+
 		editBookmarkNote: async () => {
 			debug("Telling casfile view to switch note to edit mode");
 			await casefileView.openNoteEditor();
