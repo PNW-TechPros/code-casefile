@@ -523,6 +523,30 @@ export class SharedCasefilesViewManager {
             }
         }
         await remote.share(casefile);
+        const patchedList = await this._modifySharingState((state) => {
+            const [, casefileGroupName] = casefile.path?.match(/^(.+)\/[^/]+$/) || [];
+            if (!casefile.path || !casefileGroupName) {
+                return false;
+            }
+            const casefileGroup = state.knownCasefiles?.find(cf => cf.name === casefileGroupName);
+            if (casefileGroup) {
+                casefileGroup.instances.push({ path: casefile.path });
+            } else {
+                if (!state.knownCasefiles) {
+                    state.knownCasefiles = [];
+                }
+                const newGroup: CasefileGroup = {
+                    name: casefileGroupName,
+                    instances: [{ path: casefile.path }],
+                };
+                state.knownCasefiles.push(newGroup);
+            }
+            return true;
+        });
+        if (!patchedList) {
+            debug("Failed to patch sharing state!");
+            await this.fetchFromCurrentPeer();
+        }
     }
 
     private _getCurrentKeeper(options: {
