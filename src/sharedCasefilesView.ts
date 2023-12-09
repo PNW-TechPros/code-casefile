@@ -103,9 +103,13 @@ class CasefileNameGroup implements TreeItemSource, CasefileInstanceIdentifier {
         return this._treeItem;
     }
     async getChildren(): Promise<TreeItemSource[]> {
-        await Promise.all(this.group.instances.map(async (instance) => {
+        const instances = this.group.instances;
+        await Promise.all(instances.map(async (instance) => {
             await this._manager.includeAuthors(instance);
         }));
+        this._instances = instances.map(
+            instance => new CasefileInstance(instance)
+        );
         return this._instances;
     }
     get sharedCasefilePath(): string | undefined {
@@ -119,17 +123,17 @@ class CasefileNameGroup implements TreeItemSource, CasefileInstanceIdentifier {
 class CasefileInstance implements TreeItemSource, CasefileInstanceIdentifier {
     private _treeItem: vscode.TreeItem;
     private _instancePath: any;
-    constructor(instance: { path: string, authors: string[] }) {
+    constructor(instance: CasefileInstanceMetadata) {
         this._instancePath = instance.path;
         this._treeItem = new TreeItem(
-            `By ${multiterm(instance.authors, 'and')}`
+            `By ${multiterm(instance.authors || [], 'and') || 'unknown authors'}`
         );
         this._treeItem.id = `CasefileInstance ${instance.path}`;
         this._treeItem.contextValue = IMPORTABLE_CASEFILE;
         treeItemSharedCasefiles.set(this._treeItem, instance.path);
     }
     renderTreeItem(): vscode.TreeItem {
-        throw new Error('Method not implemented.');
+        return this._treeItem;
     }
     getChildren(): vscode.ProviderResult<TreeItemSource[]> {
         throw new Error('Method not implemented.');
@@ -693,16 +697,16 @@ function workspaceFolderBasenameCount(folderName: string): number {
     );
 }
 
-function multiterm(authors: string[], conjuntion: string): string {
-    switch (authors.length) {
+function multiterm(descStrs: string[], conjunction: string): string {
+    switch (descStrs.length) {
         case 0:
-            return 'authors unknown';
+            return '';
         case 1:
-            return authors[0];
+            return descStrs[0];
         case 2:
-            return authors.join(conjuntion);
+            return descStrs.join(conjunction);
         default:
-            return `${authors.slice(0, -1).join(', ')}, ${conjuntion} ${authors.slice(-1)[0]}`;
+            return `${descStrs.slice(0, -1).join(', ')}, ${conjunction} ${descStrs.slice(-1)[0]}`;
     }
 }
 
