@@ -527,15 +527,7 @@ export class SharedCasefilesViewManager {
         } catch (error) {
             console.error(error);
             if (this.peer) {
-                const FETCH = `Fetch casefile list from ${this.peer?.remote}`;
-                const response = await vscode.window.showErrorMessage(
-                    "Failed to share casefile; local casefile list may be out-of-date.",
-                    FETCH
-                );
-                switch (response) {
-                    case FETCH:
-                        await this.fetchFromCurrentPeer();
-                }
+                await this._offerFetchForError("share casefile");
             }
             return;
         }
@@ -565,6 +557,19 @@ export class SharedCasefilesViewManager {
         }
     }
 
+    private async _offerFetchForError(opDesc: string) {
+        const FETCH = `Fetch casefile list from ${this.peer?.remote}`;
+        const response = await vscode.window.showErrorMessage(
+            `Failed to ${opDesc}; local casefile list may be out-of-date.`,
+            FETCH
+        );
+        switch (response) {
+            case FETCH:
+                await this.fetchFromCurrentPeer();
+                break;
+        }
+    }
+
     async deleteCasefile(casefileInstancePath: string): Promise<null> {
         const casefileName = casefileInstancePath.replace(/\/[^/]*$/, '');
         const ok = await vscode.window.showWarningMessage(
@@ -585,7 +590,13 @@ export class SharedCasefilesViewManager {
         if (!keeper) {
             throw new Error("code-casefile: No casefile keeper for peer");
         }
-        await keeper.remote(peer.remote).delete(casefileInstancePath);
+        try {
+            await keeper.remote(peer.remote).delete(casefileInstancePath);
+        } catch (error) {
+            console.error(error);
+            await this._offerFetchForError(`delete "${casefileName}"`);
+            return null;
+        }
         const patchedList = await this._modifySharingState((state) => {
             const [, casefileGroupName] = casefileInstancePath?.match(/^(.+)\/[^/]+$/) || [];
             if (!casefileGroupName) {
