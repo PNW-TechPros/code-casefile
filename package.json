@@ -3,8 +3,23 @@
   "publisher": "pnw-techpros",
   "displayName": "Casefile",
   "description": "The essential assistant for deep-dives in code",
+  "keywords": [
+    "bookmark",
+    "bookmarks",
+    "casefile",
+    "productivity",
+    "collaboration",
+    "organization"
+  ],
   "license": "MIT",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PNW-TechPros/code-casefile.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PNW-TechPros/code-casefile/issues"
+  },
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -52,7 +67,7 @@
         "description": "Import of shared casefile into current casefile",
         "default": "repo-pull"
       },
-      "casefile-share":{
+      "casefile-share": {
         "description": "Export of current casefile to selected peer",
         "default": "repo-push"
       }
@@ -242,11 +257,15 @@
   ],
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "esbuild-base": "npm-run-all -p esbuild:*",
+    "esbuild-base": "npm-run-all -p esbuild:* --",
     "esbuild:extension": "cross-env-shell esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node $PKG_BUILD_FLAGS",
     "esbuild:casefileView": "cross-env-shell esbuild ./src/views/casefile/view.js --bundle --outfile=out/casefileView/main.js --format=iife --loader:.js=jsx --jsx-import-source=preact --jsx=automatic $PKG_BUILD_FLAGS",
     "compile": "cross-env PKG_BUILD_FLAGS=\"--sourcemap\" npm run esbuild-base",
     "watch": "cross-env PKG_BUILD_FLAGS=\"--sourcemap --watch\" npm run esbuild-base",
+    "premake:vsix": "npm-run-all internal-make:pkg-dir internal-make:dep-licenses-dir",
+    "internal-make:pkg-dir": "mkdirp pkg",
+    "internal-make:dep-licenses-dir": "node scripts/gather-licenses.js",
+    "make:vsix": "vsce package --out pkg/",
     "compile-tsc": "tsc -p ./",
     "watch-tsc": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
@@ -262,10 +281,12 @@
     "@typescript-eslint/eslint-plugin": "^5.49.0",
     "@typescript-eslint/parser": "^5.49.0",
     "@vscode/test-electron": "^2.2.2",
+    "@vscode/vsce": "^2.22.0",
     "cross-env": "^7.0.3",
     "esbuild": "^0.17.19",
     "eslint": "^8.33.0",
     "glob": "^8.1.0",
+    "mkdirp": "^3.0.1",
     "mocha": "^10.1.0",
     "npm-run-all": "^4.1.5",
     "typescript": "^4.9.4"

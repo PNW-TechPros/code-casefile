@@ -1,6 +1,7 @@
 .vscode/**
 .vscode-test/**
 src/**
+scripts/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -8,3 +9,8 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+notes/**
+**/*.vsix
+pkg/**
+node_modules/**
+!node_modules/@vscode/codicons/dist/**
